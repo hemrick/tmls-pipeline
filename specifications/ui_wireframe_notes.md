@@ -2,7 +2,7 @@
 
 Owner: Joe (D3)
 Audience: frontend implementers (E7 dashboard, E8 chat)
-Last updated: 2026-05-25
+Last updated: 2026-05-26
 
 This is a practical, not-pretty spec. The goal is to remove ambiguity so the
 frontend team can build without a design call. ASCII wireframes are
@@ -83,7 +83,11 @@ with tap-through to detail.
 
 ```
 ┌─ Pipeline — Jill's Dashboard ──────────────────────────────────────────┐
-│  [Filter ▼ All]  [Search…]                            🔴 1 emergency    │
+│  [Filter ▼ All]  [Search…]   🔴 1 emergency  🟠 1 safety escalation     │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 🟠 SAFETY     Marie L.   1 min ago                                      │
+│   "Strong gas smell in the basement"                                    │
+│   [Safety Escalation: safety]  [Awaiting Welfare Call]                  │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ ⚠ EMERGENCY   Sarah M.   2 min ago                                      │
 │   "Water spraying everywhere, basement flooding"                        │
@@ -97,11 +101,29 @@ with tap-through to detail.
 │   "Need dishwasher reinstalled next week"                               │
 │   [Scheduled]  [Calendly Link Sent]                                     │
 ├─────────────────────────────────────────────────────────────────────────┤
+│   Safety OOS  Dan P.     2 hr ago                                       │
+│   "Hot tub pump is leaking"                                             │
+│   [Safety Escalation: wrong_trade]  [Referral Pending]                  │
+├─────────────────────────────────────────────────────────────────────────┤
 │   Closed      Unknown    3 hr ago                                       │
 │   "Is this Joe's Pizza?"                                                │
 │   [Closed — No Action: wrong_number]                                    │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+### Header counters
+
+The header row shows up to four live counts, in this priority order:
+
+| Counter            | Source                                          | Colour      |
+|--------------------|-------------------------------------------------|-------------|
+| Emergency          | conversations where `urgency_level = emergency` | `red-600`   |
+| Safety Escalation  | conversations where `urgency_level` ∈ {`safety_escalation`, `wrong_trade_oos`, `boundary_oos`} | `amber-600` |
+| Quote Draft        | conversations with a `pending_jill_review` quote| `amber-500` |
+| Manual Follow-up   | conversations where `booking_status = manual_follow_up` | `amber-600` |
+
+Show the counter only when its count is > 0. If everything is at zero,
+show a single muted "All clear" pill.
 
 ### Card data
 
@@ -115,8 +137,13 @@ Each conversation card shows:
 
 ### Sort order
 
-Emergency first (newest within), then priority by newest, then scheduled,
-then closed.
+Safety Escalation (any subtype) first, then Emergency (newest within),
+then Priority by newest, then Scheduled, then Closed.
+
+Rationale: L0 requires a human welfare follow-up. It needs to sit at the
+top of the queue even when an L1 emergency arrives at the same time,
+because the L0 customer is being redirected somewhere else and the
+welfare call should not be forgotten.
 
 ### States
 
@@ -176,6 +203,21 @@ Right pane on desktop, full screen on mobile. Has a back button on mobile.
 7. **Actions:** context-sensitive buttons (mark manual follow-up, close
    with reason).
 
+### Actions row — context-sensitive buttons
+
+The button set in the Actions row changes based on the conversation's
+combined state. Buttons disabled when not applicable.
+
+| Conversation state                                       | Buttons shown                                                         |
+|----------------------------------------------------------|-----------------------------------------------------------------------|
+| L0 — `safety_escalation`                                 | `Confirm welfare call done` • `Resend safety guidance` • `Close — Safety Resolved` |
+| L0 — `wrong_trade_oos`                                   | `Confirm referral made` • `Add referral note` • `Close — Referred Out`             |
+| L0 — `boundary_oos` (municipal-leaning)                  | `Confirm 311 suggested` • `Convert to diagnostic visit` • `Close — Referred to 311` |
+| L1 emergency                                             | `Mark Manual Follow-up` • `Mark On-Site` • `Close — No Action`                     |
+| L2 / L3 with quote pending                               | `Approve` / `Request revision` / `Reject` (in the Quote panel above)               |
+| L2 / L3 with link sent, no booking                       | `Resend link` • `Mark manual follow-up` • `Mark booked manually`                   |
+| Any                                                      | `Close — No Action` (with sub-reason picker)                                       |
+
 ### States
 
 - **Loading:** skeleton blocks for each section.
@@ -183,6 +225,49 @@ Right pane on desktop, full screen on mobile. Has a back button on mobile.
   still render).
 - **Empty quote / booking:** show short explanatory text rather than empty
   block.
+
+### L0 detail panel example (safety escalation — gas smell)
+
+When `urgency_level = safety_escalation`, the panel emphasises the
+welfare follow-up rather than the booking / quote sections.
+
+```
+┌─ Marie L.  •  🟠 Safety Escalation: safety  •  Awaiting Welfare Call ┐
+│  📞 555-0188    ✉ marie@example.com                                  │
+├──────────────────────────────────────────────────────────────────────┤
+│  TRANSCRIPT                                                          │
+│   [You]   Strong gas smell in the basement, what do I do?            │
+│   [Agent] That can be dangerous — please leave the home now. Don't  │
+│           touch any switches or appliances. Once you're outside,     │
+│           call Enbridge Gas Emergency at 1-866-763-5427. If anyone   │
+│           feels unwell, call 911. Jill has been alerted. Are you     │
+│           outside now?                                               │
+│   [You]   Yes I'm outside, calling Enbridge.                         │
+│   [Agent] Good. Jill will follow up shortly to make sure you're OK.  │
+│                                                                      │
+│  TRIAGE                                                              │
+│   🟠 Safety Escalation   confidence 0.96   source: rules             │
+│   Internal level: L0_safety                                          │
+│   Reason: Customer reports gas smell in the home.                    │
+│   Action: Deliver safety script, alert Jill, no quote, no Calendly.  │
+│   Safety guidance: Call Enbridge Gas Emergency at 1-866-763-5427.    │
+│   Matched signals: gas smell, basement                               │
+│                                                                      │
+│  BOOKING                                                             │
+│   manual_emergency  •  No Calendly link sent (safety bypass).        │
+│                                                                      │
+│  QUOTE                                                               │
+│   No quote — safety escalation does not generate a quote.            │
+│                                                                      │
+│  ACTIONS                                                             │
+│   [ ☎ Confirm welfare call done ]  [ Resend safety guidance ]        │
+│   [ Close — Safety Resolved ]                                        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+For `wrong_trade_oos` and `boundary_oos` the layout is the same; only
+the triage block (subtype label + safety guidance copy) and the action
+buttons differ per the table above.
 
 ---
 
@@ -193,7 +278,7 @@ Lives inside the conversation detail. When a quote with status
 row.
 
 ```
-┌─ QUOTE — Pending your review (v1) ───────────────────────────────────┐
+┌─ QUOTE — Pending your review (v1)                  [ Quote ▾ ]  ─────┐
 │  Job: Hot water tank not producing heat.                             │
 │                                                                      │
 │  Scope:                                                              │
@@ -202,8 +287,18 @@ row.
 │    • Repair or recommend replacement if needed                       │
 │                                                                      │
 │  Estimated price range: $250 – $600                                  │
+│  Pricing breakdown (optional, expandable):                           │
+│    Labour:   1.5 hr  ($xxx first hr + 1 × $xx half-hr)               │
+│    Truck sundries:                                            $10.00 │
+│    Materials (plumber-supplied): replacement element (~$xx)          │
+│    Materials (customer-supplied): none                               │
+│    HST (13%):                                                  $x.xx │
 │  Disclaimer: Final pricing will be confirmed on-site after           │
 │              inspection.                                             │
+│                                                                      │
+│  ⚑ Flags:  ☐ Estimate only (not a fixed quote)                      │
+│            ☐ Site visit required before commit                       │
+│            ☐ Requires permit                                         │
 │                                                                      │
 │  [ ✅ Approve ]   [ ✏ Request revision ]   [ ❌ Reject ]              │
 │                                                                      │
@@ -212,6 +307,28 @@ row.
 │    [ Send revision request ]                                         │
 └──────────────────────────────────────────────────────────────────────┘
 ```
+
+### Type toggle: Quote vs Estimate
+
+The `[ Quote ▾ ]` toggle in the header lets Jill switch between **Quote
+(fixed range)** and **Estimate (variable)**. The selection drives the
+customer-facing disclaimer (see `quote_generation_inputs.md` section 4).
+
+- **Quote (default):** standard disclaimer.
+- **Estimate:** appends "This is an estimate based on the description
+  provided. Final pricing will be confirmed on-site after inspection.
+  Additional charges may apply if the scope expands."
+
+### Flags
+
+Three optional checkboxes Jill can toggle before approving. They write
+to the quote object so downstream (E10 booking, dashboard) can respond:
+
+| Flag                            | Effect                                                                            |
+|---------------------------------|-----------------------------------------------------------------------------------|
+| Estimate only                   | Switches to estimate disclaimer; sets `is_estimate_only = true`.                  |
+| Site visit required before commit | Holds the Calendly hand-off — customer is offered a diagnostic visit, not a job booking. |
+| Requires permit                 | Pauses Calendly hand-off until Jill confirms the permit timeline.                 |
 
 ### Behaviour
 
@@ -317,11 +434,19 @@ All badges are small pills with a coloured background and short label.
 
 ### Urgency badges (driven by E9 `urgency_level`)
 
-| Label      | JSON value   | Colour token   | Notes                          |
-|------------|--------------|----------------|--------------------------------|
-| Emergency  | `emergency`  | `red-600`      | White text. ⚠ icon prefix.     |
-| Priority   | `priority`   | `amber-500`    | Black text.                    |
-| Scheduled  | `scheduled`  | `slate-500`    | White text.                    |
+| Label                                  | JSON value           | Colour token   | Notes                                       |
+|----------------------------------------|----------------------|----------------|---------------------------------------------|
+| Safety Escalation: safety              | `safety_escalation`  | `amber-600`    | White text. 🟠 icon prefix. Distinct from red emergency. |
+| Safety Escalation: wrong_trade         | `wrong_trade_oos`    | `amber-600`    | White text. 🟠 icon prefix.                  |
+| Safety Escalation: boundary            | `boundary_oos`       | `amber-600`    | White text. 🟠 icon prefix.                  |
+| Emergency                              | `emergency`          | `red-600`      | White text. ⚠ icon prefix.                  |
+| Priority                               | `priority`           | `amber-500`    | Black text.                                 |
+| Scheduled                              | `scheduled`          | `slate-500`    | White text.                                 |
+
+All three L0 urgency values share the same amber pill and 🟠 icon. The
+suffix after "Safety Escalation:" reflects the OOS subtype and surfaces
+the routing intent (safety / wrong_trade / boundary). It is meaningful to
+Jill but never shown to the customer.
 
 ### Lifecycle badges (driven by conversation/quote/booking status)
 
@@ -335,6 +460,10 @@ All badges are small pills with a coloured background and short label.
 | Calendly Link Sent  | booking.booking_status = link_sent | `purple-500` |
 | Booked              | booking.booking_status = booked | `green-600` |
 | Manual Follow-up    | booking.booking_status = manual_follow_up | `amber-600` |
+| Awaiting Welfare Call | conversation.status = safety_open_followup | `amber-700` |
+| Referral Pending    | conversation.status = wrong_trade_pending     | `amber-500`  |
+| Referred to 311     | conversation.status = boundary_referred       | `slate-500`  |
+| Safety Resolved     | conversation.status = closed_safety_escalation| `green-700`  |
 | Closed — No Action  | conversation.status = closed_no_action | `slate-400` |
 
 Closed-No-Action also displays a sub-reason chip
@@ -344,9 +473,11 @@ Closed-No-Action also displays a sub-reason chip
 ### Combination rules
 
 - A card may show **up to two** badges: one urgency, one lifecycle.
-- Emergency urgency always wins position 1.
-- If the conversation is closed, only the `Closed — No Action` badge +
-  sub-reason chip are shown.
+- Safety Escalation (any subtype) wins position 1 over everything else.
+- Emergency wins position 1 over Priority / Scheduled.
+- If the conversation is closed (`closed_no_action` or
+  `closed_safety_escalation`), only the close-state badge + sub-reason
+  chip are shown.
 
 ---
 
@@ -373,6 +504,16 @@ Use this checklist to verify the implementation matches the spec.
 - [ ] Empty / loading / error states implemented per section.
 - [ ] Closed-No-Action conversations still appear in the list with the
   sub-reason chip.
+- [ ] L0 (safety_escalation / wrong_trade_oos / boundary_oos) renders
+  the amber Safety Escalation badge with the correct subtype suffix.
+- [ ] L0 conversations sort above L1 emergencies in the list.
+- [ ] L0 conversation detail hides the Calendly card and shows
+  `manual_emergency` for booking, "No quote" for quote, and the L0
+  actions row.
+- [ ] Header counters show Emergency (red), Safety Escalation (amber),
+  Quote Draft (amber), and Manual Follow-up (amber) when non-zero.
+- [ ] Quote panel exposes the Quote / Estimate toggle plus the three
+  flags (estimate only, site visit required, requires permit).
 
 ---
 
@@ -382,8 +523,9 @@ Use this checklist to verify the implementation matches the spec.
 
 ```json
 {
-  "urgency_level": "emergency | priority | scheduled",
-  "urgency_label": "Emergency | Priority | Scheduled",
+  "urgency_level": "safety_escalation | wrong_trade_oos | boundary_oos | emergency | priority | scheduled",
+  "urgency_label": "Safety Escalation | Emergency | Priority | Scheduled",
+  "internal_level": "L0_safety | L0_oos | L1_immediate | L2_24h_to_48 | L3_more_than_48h",
   "confidence": 0.0,
   "reason": "string",
   "recommended_action": "string",
@@ -397,6 +539,14 @@ Use this checklist to verify the implementation matches the spec.
   "matched_signals": ["string"]
 }
 ```
+
+For any L0 value (`safety_escalation`, `wrong_trade_oos`, `boundary_oos`)
+the UI must:
+
+- Use the amber Safety Escalation badge (with subtype suffix internally).
+- Hide the Calendly card on the customer chat.
+- Hide / disable the Quote section in the conversation detail.
+- Show the L0 actions row described above.
 
 ### E10 scheduling result
 

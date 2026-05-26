@@ -661,7 +661,7 @@ tmls-pipeline/
 ├── data/
 │   ├── .env.local.example           # CALENDLY_SCHEDULING_URL, CALENDLY_EVENT_TYPE_URI, CALENDLY_WEBHOOK_SECRET
 │   ├── knowledge_base.yaml          # Plumbing Q&As
-│   └── contractor_profile.yaml      # "Steve's Plumbing" info
+│   └── contractor_profile.yaml      # "Jill's Plumbing" info
 │
 ├── .env.local.example               # Template for secrets
 ├── .gitignore
@@ -718,7 +718,7 @@ These decisions are **blocking** — resolve them before Day 1 Hour 1.
 | **Knowledge Base Source** | Hand-craft 30–50 Q&As vs scrape public plumbing site | Time investment, control over content, accuracy | E6 Owner + D1 | D1 Hr 0.5 |
 | **Email MVP** | Flat file output vs wire real SMTP/SendGrid | Demo polish, MVP scope, time budget | E11 Owner + D2 | D1 Hr 1 |
 | **Emergency Alert Strategy** | Dashboard red badge only vs add simulated Slack/SMS | Demo impact, scope creep, judging criteria | E9 Owner + D3 | D1 Hr 1 |
-| **Contractor Persona** | Use realistic "Steve's Plumbing, GTA" or placeholder | Credibility on stage, detail level | E12 Owner + D3 | D1 Hr 1 |
+| **Contractor Persona** | Use Jill's Plumbing as the contractor persona (resolved) | Credibility on stage, detail level | E12 Owner + D3 | D1 Hr 1 |
 
 ---
 

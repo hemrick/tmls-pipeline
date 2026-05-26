@@ -255,6 +255,6 @@ Clients
 | 1 | OpenAI or GCP model? | Commit before building. Affects prompt style, latency, and cost. |
 | 2 | Who writes the plumbing knowledge prompt section? | Hand-write 30-50 facts covering common problems, urgency signals, and cost ranges. Goes directly in the system prompt. Someone needs to own this on Day 1. |
 | 3 | Emergency notification -- dashboard flag only, or something more dramatic for the demo? | A red alert banner or simulated ping would sell the emergency scenario. Worth 30 min if time allows. |
-| 4 | Contractor persona for the demo? | "Steve's Plumbing, serving the GTA since 2003" is 10x more believable on stage than placeholder text. |
+| 4 | Contractor persona for the demo? | Jill's Plumbing has been selected as the demo persona. See specifications/contractor_persona.md (forthcoming) for details. |
 | 5 | Who owns the debug / logging layer? | Build this first. Everything else is harder to fix without it. |
 | 6 | **[BLOCKING] Who creates the Calendly account?** | Needs to be done on Day 1 before any scheduling or webhook work can be tested. Free Basic plan. Set up event type + 30 min travel buffer + working hours. Register webhook URL once backend is deployed. |

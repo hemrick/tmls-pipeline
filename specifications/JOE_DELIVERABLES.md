@@ -1,7 +1,7 @@
 # Joe Deliverables Tracker
 
 Owner: Joe
-Last updated: 2026-05-25
+Last updated: 2026-05-26
 
 This document tracks Joe's hackathon deliverables for Pipeline (TMLS Agentic
 Hackathon). Pipeline is a text-first AI intake assistant for plumbing
@@ -29,9 +29,17 @@ These rules apply to everything below:
 - **No Jill approval for appointment times.** The Calendly link goes straight
   to the customer; Jill sees the confirmed booking after.
 - **Jill approval is required for quotes.**
-- **Emergency** cases bypass normal quote/booking flow and alert Jill
-  immediately.
-- All agent responses must be short, conversational, and safe.
+- **Safety Escalation (L0)** cases bypass quote *and* Calendly flow. L0 covers
+  three subtypes: safety (gas, water + electrical, sewage + vulnerable
+  occupant, sewer gas + symptoms), wrong-trade OOS (pool, well, septic, gas
+  boiler, irrigation), and boundary OOS (no water + neighbours, low pressure
+  + neighbours, yard sewer signs).
+- **Emergency (L1)** cases bypass normal quote/booking flow and alert Jill
+  immediately (active uncontrolled water, sewage in living space, frozen
+  pipe risk).
+- All agent responses must be short, conversational, and safe. L0 safety
+  scripts include specific phone numbers (e.g. Enbridge 1-866-763-5427), not
+  categories.
 - Notifications to Jill fire **in parallel** with quote/scheduling work; they
   are not a gate.
 - A conversation can terminate cleanly with **no call to action** (wrong
@@ -84,83 +92,114 @@ without ambiguity.
 
 ## E9 — Triage and urgency logic
 
-**Status:** implemented (rules + LLM fallback) with tests.
+**Status:** implemented (rules + LLM fallback) with tests. Post-Calen-KB
+L0 update applied.
 
 **Code:** [`backend/app/services/triage.py`](../backend/app/services/triage.py)
 
 **Tests:** [`backend/tests/test_triage.py`](../backend/tests/test_triage.py)
 
+**Related specs:**
+
+- [`plumbing_triage_knowledge_base.md`](./plumbing_triage_knowledge_base.md) — full residential plumbing KB (Calen)
+- [`triage_l0_update_notes.md`](./triage_l0_update_notes.md) — L0 / OOS scope, UI labels, examples
+
 ### Scope
 
 Classify each inbound customer message into one of:
 
-- `emergency` — active damage, safety risk, no water, gas smell, sewage
-  backup, urgent language with confirmed damage.
-- `priority` — uncomfortable / inconvenient but contained (no hot water,
-  contained leak, toilet not working without flooding).
-- `scheduled` — planned work (dishwasher reinstall, faucet replacement,
-  renovation, flexible timing).
+- `safety_escalation` (L0 safety) — gas smell, water near electrical,
+  sewage backup with vulnerable occupant, sewer gas with reported
+  symptoms. No quote, no Calendly. Safety script with specific phone
+  number, then welfare follow-up by Jill.
+- `wrong_trade_oos` (L0 OOS) — pool / hot tub, well, septic, gas boiler,
+  irrigation. Real problem, wrong specialist. No quote, no Calendly.
+  Flagged for Jill as a referral opportunity.
+- `boundary_oos` (L0 OOS) — symptoms that may be municipal (no water +
+  neighbours affected, low pressure + neighbours affected, yard sewer
+  signs). Suggest 311 first; if it turns out to be owner-side, Jill
+  follows up.
+- `emergency` (L1) — active uncontrolled water, sewage in living space
+  (no vulnerable signal), burst pipe, frozen pipe risk, no water at
+  this property (no neighbours signal).
+- `priority` (L2) — uncomfortable / inconvenient but contained (no hot
+  water, contained leak, toilet not working without flooding).
+- `scheduled` (L3) — planned work (dishwasher reinstall, faucet
+  replacement, renovation, flexible timing).
 
 ### Implementation summary
 
-Hybrid classifier:
+Hybrid classifier with strict ordering:
 
-1. **Stage A — Rules.** Keyword and phrase matching. Hard emergency signals
-   short-circuit immediately.
-2. **Stage B — Clarification.** If the customer claims urgency without hard
-   emergency signals, the orchestrator should ask the customer to choose
-   between "earliest available (emergency rate)" and "standard appointment
-   (regular rate)". The result of that exchange flips the
-   `customer_claimed_emergency` and `active_damage_confirmed` flags on the
-   next call.
-3. **LLM fallback.** If no rules fire and an LLM client is provided, the
-   classifier calls it. The function is dependency-injected so tests run
-   fully offline.
-4. **Safe default.** If no rules fire and no LLM is available, returns
-   `priority` with low confidence. Never silently downgrades a real
-   emergency; never blindly escalates ambiguous input.
+1. **L0 safety detection.** Gas, water+electrical, sewage+vulnerable,
+   sewer-gas+symptoms. Detection bias is toward L0: a false positive
+   costs nothing, a false negative is catastrophic.
+2. **L0 wrong-trade OOS.** Pool, well, septic, gas boiler, irrigation
+   keyword matches.
+3. **L0 boundary OOS.** Symptom + neighbours / whole-street / yard
+   signal combination. This must run before L1 emergency so that "no
+   water + neighbours" classifies as boundary rather than emergency.
+4. **L1 emergency / L2 priority / L3 scheduled** — existing rules.
+5. **Clarification.** Soft urgency words (`asap`, `urgent`) without
+   hard signals route to L2 priority with `needs_clarification = true`.
+6. **LLM fallback.** When no rules fire and a client is provided. The
+   whitelist only accepts L1 / L2 / L3 — LLMs are not trusted to
+   assign L0.
+7. **Safe default.** Routes to L2 priority with low confidence.
 
 ### JSON contract returned
 
 ```json
 {
-  "urgency_level": "emergency",
-  "urgency_label": "Emergency",
+  "urgency_level": "safety_escalation | wrong_trade_oos | boundary_oos | emergency | priority | scheduled",
+  "urgency_label": "Safety Escalation | Emergency | Priority | Scheduled",
+  "internal_level": "L0_safety | L0_oos | L1_immediate | L2_24h_to_48 | L3_more_than_48h",
   "confidence": 0.92,
-  "reason": "Customer reports active flooding in basement.",
-  "recommended_action": "Alert Jill immediately and stop normal quote/booking flow.",
-  "customer_facing_guidance": "If safe, turn off your main water valve. Jill has been alerted.",
+  "reason": "Customer reports a gas smell in the home.",
+  "recommended_action": "Deliver the safety script verbatim, alert Jill for a welfare follow-up call.",
+  "customer_facing_guidance": "Please leave the home... call Enbridge Gas Emergency at 1-866-763-5427...",
   "requires_human_followup": true,
   "continue_normal_flow": false,
   "needs_clarification": false,
   "customer_claimed_emergency": true,
   "active_damage_confirmed": true,
   "classification_source": "rules",
-  "matched_signals": ["basement flooding", "spraying everywhere"]
+  "matched_signals": ["gas smell"]
 }
 ```
 
 ### Acceptance criteria
 
+- L0 (any subtype) stops normal flow (`continue_normal_flow = false`)
+  and produces safety / redirect guidance with specific phone numbers.
+- L0 safety detection biased toward sensitivity (gas + water-near-electrical
+  + sewage-with-vulnerable + sewer-gas-with-symptoms all match).
 - Emergency stops normal flow (`continue_normal_flow = false`).
 - Priority continues intake but is flagged
   (`continue_normal_flow = true`, `requires_human_followup = true`).
 - Scheduled continues standard flow
   (`continue_normal_flow = true`, `requires_human_followup = false`).
-- Emergency includes safe, short customer-facing guidance.
-- Output is easy for frontend / dashboard to consume (flat JSON, no nested
-  objects).
-- Tests cover all three demo scenarios plus the safe-default and LLM
-  fallback paths.
+- Output is easy for frontend / dashboard to consume (flat JSON, no
+  nested objects). New `internal_level` field exposes the L0/L1/L2/L3
+  mapping.
+- Tests cover all three demo scenarios, the L0 paths (safety,
+  wrong-trade, boundary), the safe-default and LLM fallback paths, plus
+  the rule that LLMs cannot assign L0.
 
 ### Remaining TODOs
 
-- [ ] Orchestrator (E2) integration: call `classify_urgency` on every turn,
-  store the latest result on the conversation.
-- [ ] Orchestrator decision: when `needs_clarification` is true, send the
-  "earliest vs standard" question to the customer before continuing.
-- [ ] Optional: swap in a real LLM client (OpenAI / Vertex) by passing it
-  into `classify_urgency(... llm_client=...)`.
+- [ ] Orchestrator (E2) integration: call `classify_urgency` on every
+  turn, store the latest result on the conversation, and read
+  `urgency_level` and `internal_level` for routing.
+- [ ] Orchestrator decision: when `needs_clarification` is true, send
+  the "earliest vs standard" question to the customer before continuing.
+- [ ] Orchestrator decision: when any L0 value is returned, deliver
+  the `customer_facing_guidance` verbatim and skip the quote + Calendly
+  flow (E10 / E11 already enforce this at the service layer).
+- [ ] Optional: confirmation loop on L0 safety (re-ask if customer
+  hasn't confirmed they're acting on the script). Out of MVP scope.
+- [ ] Optional: swap in a real LLM client (OpenAI / Vertex) by passing
+  it into `classify_urgency(... llm_client=...)`.
 
 ---
 
