@@ -1,0 +1,60 @@
+# D1: Agent Observability Storage Schema
+# Custom fields only — LLM calls, tool calls, and message content are handled
+# natively by MS Agent Framework middleware (ChatContext, FunctionInvocationContext,
+# Content factory types). Do not duplicate those here.
+#
+# Written by: logging utility (E5) via @agent_middleware, one record per turn.
+# Stored as: appended array in agent_log.json on Google Storage.
+
+# ─────────────────────────────────────────────────────────────
+# PipelineTurnLog  —  one record per agent turn
+# Pipeline-specific fields the framework has no concept of.
+# ─────────────────────────────────────────────────────────────
+PipelineTurnLog:
+  type: object
+  required: [id, conversation_id, turn_number, sub_agent, routing_decision,
+             state_before, state_after, latency_ms, timestamp]
+  properties:
+    id:
+      type: string
+      format: uuid
+    conversation_id:
+      type: string
+      format: uuid
+      description: "Pulled from AgentSession.state['conversation_id']"
+    turn_number:
+      type: integer
+      description: "1-indexed. Incremented counter stored in AgentSession.state."
+    sub_agent:
+      type: string
+      enum: [conversation, notification, quote, scheduling]
+      description: "Which sub-agent handled this turn. Set by orchestrator before delegating."
+    routing_decision:
+      type: string
+      description: "Short explanation of why this sub-agent was chosen."
+      example: "Customer described flooding — routed directly to triage as CRITICAL."
+    state_before:
+      type: string
+      enum: [New, Triaged, Scheduled, Quoted, Approved, Booked, Closed]
+      description: "Conversation state read from AgentSession.state before the turn."
+    state_after:
+      type: string
+      enum: [New, Triaged, Scheduled, Quoted, Approved, Booked, Closed]
+      description: "Conversation state read from AgentSession.state after the turn."
+    latency_ms:
+      type: integer
+      description: "Wall-clock time for the full turn (framework call to response returned)."
+    timestamp:
+      type: string
+      format: date-time
+
+PipelineTurnLog_example:
+  id: "pt-0001"
+  conversation_id: "a1b2c3d4-0000-0000-0000-000000000001"
+  turn_number: 1
+  sub_agent: "triage"
+  routing_decision: "First turn — always route to triage to classify urgency before anything else."
+  state_before: "New"
+  state_after: "Triaged"
+  latency_ms: 1842
+  timestamp: "2026-05-25T09:00:02Z"

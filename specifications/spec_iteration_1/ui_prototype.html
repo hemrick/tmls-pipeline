@@ -1,0 +1,3219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline — Jill's Plumbing Dashboard Prototype v2</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+  :root {
+    --bg-page: #F7F6F2;
+    --bg-surface: #FFFFFF;
+    --bg-secondary: #F1EFE8;
+    --text-primary: #1A1A1A;
+    --text-secondary: #5F5E5A;
+    --text-tertiary: #888780;
+    --border-light: rgba(0,0,0,0.08);
+    --border-mid: rgba(0,0,0,0.15);
+    --navy: #21295C;
+    --navy-dark: #042C53;
+    --l0-fill: #FAEEDA;
+    --l0-stroke: #BA7517;
+    --l0-text: #633806;
+    --l0-deep: #412402;
+    --l1-fill: #FCEBEB;
+    --l1-stroke: #A32D2D;
+    --l1-text: #791F1F;
+    --l1-deep: #501313;
+    --l2-fill: #E6F1FB;
+    --l2-stroke: #185FA5;
+    --l2-text: #0C447C;
+    --l2-deep: #042C53;
+    --l3-fill: #F1EFE8;
+    --l3-stroke: #888780;
+    --l3-text: #444441;
+    --green-fill: #EAF3DE;
+    --green-stroke: #3B6D11;
+    --green-text: #27500A;
+    --green-deep: #173404;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #E8E6DE;
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+    font-size: 14px;
+  }
+
+  /* WORKSPACE */
+  .workspace {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+    gap: 16px;
+  }
+  .workspace-header {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 0 8px;
+  }
+  .ws-title { font-size: 16px; font-weight: 500; color: var(--text-secondary); }
+  .ws-screen-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    background: var(--bg-surface);
+    padding: 6px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-light);
+  }
+  .ws-tab {
+    font-size: 12px;
+    padding: 6px 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .ws-tab:hover { background: var(--bg-secondary); color: var(--text-primary); }
+  .ws-tab.active { background: var(--navy); color: white; }
+  .workspace-note {
+    width: 100%;
+    max-width: 1100px;
+    background: var(--bg-surface);
+    border-left: 4px solid var(--navy);
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .workspace-note strong { color: var(--text-primary); font-weight: 500; }
+
+  /* DEVICE FRAME — fixed height for prototype, but content scrolls correctly */
+  .device {
+    width: 390px;
+    max-width: 100%;
+    background: #1a1a1a;
+    border-radius: 36px;
+    padding: 10px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25), 0 4px 16px rgba(0,0,0,0.15);
+  }
+  .device-screen {
+    background: var(--bg-page);
+    border-radius: 28px;
+    overflow: hidden;
+    height: 800px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .status-bar {
+    height: 38px;
+    padding: 12px 22px 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex-shrink: 0;
+  }
+  .status-bar-right { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+
+  /* APP HEADER */
+  .app-header {
+    padding: 8px 18px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    background: var(--bg-page);
+  }
+  .app-header.with-back { padding-top: 4px; }
+  .back-btn {
+    background: transparent;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 20px;
+    margin-left: -6px;
+  }
+  .back-btn:hover { background: var(--bg-secondary); }
+  .app-title {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+    line-height: 1.2;
+  }
+  .app-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .header-action {
+    background: transparent;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 20px;
+  }
+  .header-action:hover { background: var(--bg-secondary); color: var(--text-primary); }
+
+  /* SCROLL FIX: explicit flex layout, overflow on .app-content, padding-bottom for bottom nav */
+  .app-content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 14px 90px;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0; /* critical for flex children to scroll */
+  }
+  .app-content::-webkit-scrollbar { width: 4px; }
+  .app-content::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 100px; }
+
+  /* BOTTOM NAV — phone in-app */
+  .bottom-nav {
+    flex-shrink: 0;
+    background: var(--bg-surface);
+    border-top: 0.5px solid var(--border-light);
+    padding: 6px 8px 18px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+  .nav-btn {
+    background: transparent;
+    border: none;
+    padding: 8px 4px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 500;
+    transition: color 0.15s;
+    position: relative;
+  }
+  .nav-btn i { font-size: 22px; }
+  .nav-btn:hover { color: var(--text-primary); }
+  .nav-btn.active { color: var(--navy); }
+  .nav-btn .nav-badge {
+    position: absolute;
+    top: 4px;
+    right: 28%;
+    background: var(--l1-stroke);
+    color: white;
+    font-size: 8px;
+    font-weight: 500;
+    min-width: 14px;
+    height: 14px;
+    border-radius: 100px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .nav-btn .nav-badge.amber { background: var(--l0-stroke); }
+
+  /* TIME WINDOW DROPDOWN */
+  .time-window {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 4px 14px;
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-light);
+    padding: 6px 8px;
+    position: relative;
+  }
+  .tw-arrow {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: background 0.15s;
+  }
+  .tw-arrow:hover { background: var(--bg-secondary); }
+  .tw-arrow:disabled { color: var(--text-tertiary); cursor: not-allowed; opacity: 0.4; }
+  .tw-current {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: var(--text-primary);
+    font-family: inherit;
+  }
+  .tw-current:hover { background: var(--bg-secondary); }
+  .tw-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-mid);
+    margin-top: 4px;
+    z-index: 100;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+  .tw-menu-item {
+    padding: 12px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 0.5px solid var(--border-light);
+    background: var(--bg-surface);
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    color: var(--text-primary);
+  }
+  .tw-menu-item:hover { background: var(--bg-secondary); }
+  .tw-menu-item:last-child { border-bottom: none; }
+  .tw-menu-item.selected { background: var(--bg-secondary); font-weight: 500; }
+
+  /* VIEW SHORTCUT ROW — restored, takes user to Pipeline / Calendar quickly */
+  .view-shortcut-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .view-shortcut {
+    background: var(--bg-surface);
+    border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: inherit;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .view-shortcut:hover { background: var(--bg-secondary); }
+  .view-shortcut-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--navy);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .view-shortcut-text { flex: 1; min-width: 0; }
+  .view-shortcut-title { font-size: 13px; font-weight: 500; }
+  .view-shortcut-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .view-shortcut-pip {
+    display: flex;
+    gap: 3px;
+    margin-top: 4px;
+  }
+  .pip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+  .pip-l0 { background: var(--l0-stroke); }
+  .pip-l1 { background: var(--l1-stroke); }
+  .pip-l2 { background: var(--l2-stroke); }
+  .pip-l3 { background: var(--l3-stroke); }
+
+  /* TIER 0 CARDS */
+  .tier0-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .tier0-card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    border: 0.5px solid var(--border-light);
+    cursor: pointer;
+    transition: transform 0.1s;
+    text-align: left;
+    font-family: inherit;
+  }
+  .tier0-card:active { transform: scale(0.97); }
+  .tier0-card.active-l0 { border: 2px solid var(--l0-stroke); background: var(--l0-fill); }
+  .tier0-card.active-l1 { border: 2px solid var(--l1-stroke); background: var(--l1-fill); }
+  .tier0-card.active-quote { border: 2px solid var(--l2-stroke); background: var(--l2-fill); }
+  .tier0-card.idle { opacity: 0.5; }
+  .tier0-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    line-height: 1.3;
+    font-weight: 500;
+  }
+  .tier0-count { font-size: 26px; font-weight: 500; line-height: 1; }
+  .tier0-age { font-size: 10px; color: var(--text-secondary); margin-top: 4px; }
+  .tier0-card.active-l0 .tier0-label,
+  .tier0-card.active-l0 .tier0-count,
+  .tier0-card.active-l0 .tier0-age { color: var(--l0-text); }
+  .tier0-card.active-l1 .tier0-label,
+  .tier0-card.active-l1 .tier0-count,
+  .tier0-card.active-l1 .tier0-age { color: var(--l1-text); }
+  .tier0-card.active-quote .tier0-label,
+  .tier0-card.active-quote .tier0-count,
+  .tier0-card.active-quote .tier0-age { color: var(--l2-text); }
+
+  /* SECTION HEADERS */
+  .section-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 16px 4px 8px;
+  }
+  .section-h {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .section-action {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: inherit;
+  }
+  .section-action:hover { color: var(--text-primary); }
+
+  /* METRIC GRID */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .metric-card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    border: 0.5px solid var(--border-light);
+  }
+  .metric-card.tappable {
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .metric-card.tappable:active { transform: scale(0.98); }
+  .metric-card.green-highlight {
+    background: var(--green-fill);
+    border-color: var(--green-stroke);
+  }
+  .metric-card.green-highlight .metric-label { color: var(--green-text); }
+  .metric-card.green-highlight .metric-value { color: var(--green-deep); }
+  .metric-card.green-highlight .metric-sub { color: var(--green-text); }
+  .metric-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .metric-value {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.1;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .metric-sub {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  .metric-sparkline {
+    height: 24px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .metric-sparkline svg { width: 100%; height: 100%; }
+  .trend-arrow-up { color: var(--green-stroke); font-size: 10px; font-weight: 500; }
+  .trend-arrow-down { color: var(--l1-stroke); font-size: 10px; font-weight: 500; }
+
+  /* Metric variant toggle (segmented control inside the card) */
+  .metric-variant-toggle {
+    display: flex;
+    gap: 2px;
+    background: rgba(0,0,0,0.04);
+    border-radius: 100px;
+    padding: 2px;
+    margin-top: 8px;
+  }
+  .green-highlight .metric-variant-toggle { background: rgba(39, 80, 10, 0.08); }
+  .metric-variant-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 4px 6px;
+    border-radius: 100px;
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .green-highlight .metric-variant-btn { color: var(--green-text); }
+  .metric-variant-btn.active {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .green-highlight .metric-variant-btn.active {
+    background: var(--bg-surface);
+    color: var(--green-deep);
+  }
+
+  /* ACCORDION */
+  .accordion-expand {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-light);
+    margin-top: 8px;
+    grid-column: 1 / 3;
+    overflow: hidden;
+    padding: 14px;
+  }
+  .accordion-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .accordion-tab {
+    background: var(--bg-secondary);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-weight: 500;
+  }
+  .accordion-tab.active {
+    background: var(--navy);
+    color: white;
+  }
+  .mini-chart { height: 80px; position: relative; }
+  .mini-chart svg { width: 100%; height: 100%; }
+  .chart-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+
+  /* NEXT UP */
+  .next-job-card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    border: 0.5px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .next-job-card:hover { background: var(--bg-secondary); }
+  .next-job-time {
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 56px;
+    color: var(--text-primary);
+  }
+  .next-job-info { flex: 1; min-width: 0; }
+  .next-job-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .next-job-detail {
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .next-job-action { color: var(--text-secondary); font-size: 16px; }
+
+  /* DAY BOOKINGS EXPANSION */
+  .day-bookings {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-top: 6px;
+    margin-bottom: 12px;
+  }
+  .day-booking-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 6px;
+    border-bottom: 0.5px solid var(--border-light);
+    background: var(--bg-surface);
+    border-radius: var(--radius-sm);
+    margin-bottom: 4px;
+  }
+  .day-booking-row:last-child { margin-bottom: 0; }
+  .day-booking-time {
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 56px;
+  }
+  .day-booking-name { font-size: 12px; flex: 1; }
+  .day-booking-urg {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 100px;
+    font-weight: 500;
+  }
+  .urg-pill-l2 { background: var(--l2-stroke); color: var(--l2-fill); }
+  .urg-pill-l3 { background: var(--l3-stroke); color: var(--l3-fill); }
+  .urg-pill-l1 { background: var(--l1-stroke); color: var(--l1-fill); }
+  .urg-pill-l0 { background: var(--l0-stroke); color: var(--l0-fill); }
+
+  /* TIER 0 DRILL-INS */
+  .filter-context {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    line-height: 1.4;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .filter-context.l0 { background: var(--l0-fill); color: var(--l0-text); }
+  .filter-context.l1 { background: var(--l1-fill); color: var(--l1-text); }
+  .filter-context.quote { background: var(--l2-fill); color: var(--l2-text); }
+  .filter-context i { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  .drill-row {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    border: 0.5px solid var(--border-light);
+    border-left: 5px solid var(--l3-stroke);
+    margin-bottom: 8px;
+    transition: background 0.15s;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  .drill-row.l0 {
+    background: var(--l0-fill);
+    border-color: var(--l0-stroke);
+    border-left: 5px solid var(--l0-stroke);
+  }
+  .drill-row.l1 {
+    background: var(--l1-fill);
+    border-color: var(--l1-stroke);
+    border-left: 5px solid var(--l1-stroke);
+  }
+  .drill-row.quote {
+    background: var(--l2-fill);
+    border-color: var(--l2-stroke);
+    border-left: 5px solid var(--l2-stroke);
+  }
+  .drill-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .avatar.l0 { background: var(--l0-stroke); color: var(--l0-fill); }
+  .avatar.l1 { background: var(--l1-stroke); color: var(--l1-fill); }
+  .avatar.quote { background: var(--l2-stroke); color: var(--l2-fill); }
+  .drill-name { font-size: 14px; font-weight: 500; flex: 1; }
+  .drill-row.l0 .drill-name { color: var(--l0-deep); }
+  .drill-row.l1 .drill-name { color: var(--l1-deep); }
+  .drill-row.quote .drill-name { color: var(--l2-deep); }
+  .drill-time { font-size: 11px; color: var(--text-secondary); }
+  .drill-row.l0 .drill-time { color: var(--l0-stroke); }
+  .drill-row.l1 .drill-time { color: var(--l1-stroke); }
+  .drill-row.quote .drill-time { color: var(--l2-stroke); }
+  .drill-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px 12px;
+    font-size: 11px;
+  }
+  .drill-field { display: flex; gap: 6px; }
+  .drill-field-label {
+    color: var(--text-secondary);
+    min-width: 60px;
+    flex-shrink: 0;
+  }
+  .drill-row.l0 .drill-field-label { color: var(--l0-stroke); }
+  .drill-row.l1 .drill-field-label { color: var(--l1-stroke); }
+  .drill-row.quote .drill-field-label { color: var(--l2-stroke); }
+  .drill-field-value { font-weight: 500; word-break: break-word; }
+  .drill-row.l0 .drill-field-value { color: var(--l0-deep); }
+  .drill-row.l1 .drill-field-value { color: var(--l1-deep); }
+  .drill-row.quote .drill-field-value { color: var(--l2-deep); }
+
+  /* NOTES SECTION */
+  .notes-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 0.5px solid var(--border-light);
+  }
+  .drill-row.l0 .notes-section { border-top-color: rgba(186, 117, 23, 0.25); }
+  .drill-row.l1 .notes-section { border-top-color: rgba(163, 45, 45, 0.25); }
+  .notes-label {
+    font-size: 10px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .drill-row.l0 .notes-label { color: var(--l0-stroke); }
+  .drill-row.l1 .notes-label { color: var(--l1-stroke); }
+  .notes-textarea {
+    width: 100%;
+    min-height: 56px;
+    background: var(--bg-surface);
+    border: 0.5px solid var(--border-mid);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    font-size: 11px;
+    font-family: inherit;
+    resize: vertical;
+    color: var(--text-primary);
+  }
+  .drill-row.l0 .notes-textarea { border-color: rgba(186, 117, 23, 0.4); }
+  .drill-row.l1 .notes-textarea { border-color: rgba(163, 45, 45, 0.4); }
+  .notes-textarea:focus {
+    outline: none;
+    border-color: var(--navy);
+  }
+  .checklist {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  .checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 5px 8px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+    color: var(--text-primary);
+  }
+  .checklist-item:hover { background: rgba(0,0,0,0.04); }
+  .checklist-item .check-box {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--border-mid);
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .checklist-item.checked .check-box {
+    background: var(--green-stroke);
+    border-color: var(--green-stroke);
+  }
+  .checklist-item.checked .check-box::after {
+    content: '';
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) translate(-1px, -1px);
+  }
+  .checklist-item.checked .checklist-label {
+    text-decoration: line-through;
+    color: var(--text-tertiary);
+  }
+  .drill-row.l0 .checklist-item.checked .check-box { background: var(--l0-stroke); border-color: var(--l0-stroke); }
+  .drill-row.l1 .checklist-item.checked .check-box { background: var(--l1-stroke); border-color: var(--l1-stroke); }
+  .checklist-label { flex: 1; }
+  .checklist-timestamp {
+    font-size: 9px;
+    color: var(--text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .drill-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .drill-btn {
+    flex: 1;
+    min-width: 90px;
+    background: var(--bg-surface);
+    border: 0.5px solid var(--border-mid);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .drill-btn.primary {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: white;
+  }
+  .drill-btn.primary:hover { background: var(--navy-dark); }
+  .drill-btn:hover { background: var(--bg-secondary); }
+  .drill-btn.danger {
+    color: var(--l1-text);
+    border-color: var(--l1-stroke);
+  }
+  .drill-btn.danger:hover { background: var(--l1-fill); }
+
+  /* PIPELINE QUEUE */
+  .group-header {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin: 14px 4px 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .conv-row {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    padding: 10px 12px 10px 14px;
+    border: 0.5px solid var(--border-light);
+    border-left: 5px solid var(--l3-stroke);
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  .conv-row.urg-l0 {
+    background: var(--l0-fill);
+    border-color: var(--l0-stroke);
+    border-left: 5px solid var(--l0-stroke);
+  }
+  .conv-row.urg-l1 {
+    background: var(--l1-fill);
+    border-color: var(--l1-stroke);
+    border-left: 5px solid var(--l1-stroke);
+  }
+  .conv-row.urg-l2 { border-left: 5px solid var(--l2-stroke); }
+  .conv-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .conv-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .conv-time { font-size: 11px; color: var(--text-secondary); }
+  .conv-row.urg-l0 .conv-time { color: var(--l0-stroke); }
+  .conv-row.urg-l1 .conv-time { color: var(--l1-stroke); }
+  .conv-summary { font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 6px; }
+  .conv-row.urg-l0 .conv-summary { color: var(--l0-text); }
+  .conv-row.urg-l1 .conv-summary { color: var(--l1-text); }
+  .conv-bottom { display: flex; align-items: center; gap: 6px; }
+  .urg-label {
+    font-size: 9px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 100px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: var(--bg-secondary);
+  }
+  .conv-row.urg-l0 .urg-label { background: var(--l0-stroke); color: var(--l0-fill); }
+  .conv-row.urg-l1 .urg-label { background: var(--l1-stroke); color: var(--l1-fill); }
+  .conv-row.urg-l2 .urg-label { background: var(--l2-stroke); color: var(--l2-fill); }
+  .conv-row.urg-l3 .urg-label { background: var(--l3-stroke); color: var(--l3-fill); }
+  .status-pill {
+    font-size: 9px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 100px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+  }
+  .status-pill.needs-you {
+    background: var(--bg-surface);
+    border: 0.5px solid var(--border-mid);
+    color: var(--text-primary);
+  }
+  .status-pill.customer-side { background: var(--bg-secondary); color: var(--text-secondary); }
+  .status-pill.booked { background: var(--green-fill); color: var(--green-text); }
+
+  /* CLOSED SECTION — more prominent */
+  .closed-toggle {
+    cursor: pointer;
+    user-select: none;
+    padding: 12px 14px;
+    background: var(--bg-surface);
+    border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-md);
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-primary);
+    width: 100%;
+    font-family: inherit;
+    text-align: left;
+    transition: background 0.15s;
+  }
+  .closed-toggle:hover { background: var(--bg-secondary); }
+  .closed-toggle i.chev { transition: transform 0.2s; font-size: 16px; color: var(--text-secondary); }
+  .closed-toggle.open i.chev { transform: rotate(90deg); }
+  .closed-toggle-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--bg-secondary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .closed-toggle-text { flex: 1; }
+  .closed-toggle-title { font-weight: 500; }
+  .closed-toggle-sub { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+
+  /* DETAIL VIEW */
+  .detail-card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border-light);
+    padding: 14px 16px;
+  }
+  .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 0.5px solid var(--border-light);
+  }
+  .detail-header .avatar { width: 40px; height: 40px; }
+  .detail-name { font-size: 15px; font-weight: 500; }
+  .detail-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .escalation-banner {
+    background: var(--l0-fill);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .escalation-banner i {
+    color: var(--l0-stroke);
+    font-size: 18px;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+  .escalation-text {
+    font-size: 11px;
+    color: var(--l0-text);
+    line-height: 1.5;
+  }
+  .escalation-text strong { font-weight: 500; color: var(--l0-deep); }
+  .transcript {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .turn { font-size: 12px; line-height: 1.5; margin-bottom: 8px; }
+  .turn-cust { color: var(--text-primary); }
+  .turn-agent {
+    color: var(--text-secondary);
+    padding-left: 12px;
+    border-left: 2px solid var(--border-mid);
+  }
+
+  /* CALENDAR */
+  .cal-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .cal-toolbar .tab-group {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-surface);
+    padding: 4px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-light);
+    flex: 1;
+  }
+  .cal-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 6px;
+    font-size: 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text-secondary);
+  }
+  .cal-tab.active {
+    background: var(--navy);
+    color: white;
+  }
+  .cal-month-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .cal-month-label { font-size: 14px; font-weight: 500; }
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .cal-day-header {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: 4px;
+    text-transform: uppercase;
+  }
+  .cal-day {
+    aspect-ratio: 1;
+    background: var(--bg-surface);
+    border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s;
+    position: relative;
+    font-family: inherit;
+  }
+  .cal-day:hover { background: var(--bg-secondary); }
+  .cal-day.dim { opacity: 0.35; }
+  .cal-day.today {
+    border-color: var(--navy);
+    border-width: 2px;
+    font-weight: 500;
+  }
+  .cal-day.has-bookings { background: var(--l2-fill); border-color: var(--l2-stroke); }
+  .cal-day.has-bookings.l0 { background: var(--l0-fill); border-color: var(--l0-stroke); }
+  .cal-day.has-bookings.l1 { background: var(--l1-fill); border-color: var(--l1-stroke); }
+  .cal-day-num { font-weight: 500; }
+  .cal-day-badge {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 9px;
+    background: var(--l2-stroke);
+    color: white;
+    padding: 1px 5px;
+    border-radius: 100px;
+    font-weight: 500;
+  }
+  .cal-day.l0 .cal-day-badge { background: var(--l0-stroke); }
+  .cal-day.l1 .cal-day-badge { background: var(--l1-stroke); }
+
+  .week-day-card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-light);
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .week-day-header {
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-secondary);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .week-day-count {
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+  .week-day-empty {
+    padding: 14px;
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    font-style: italic;
+  }
+
+  /* SMS SCREEN */
+  .sms-wrapper {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin: 8px 0;
+  }
+  .sms-thread-header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .sms-thread-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    margin: 0 auto 6px;
+    font-size: 16px;
+  }
+  .sms-thread-name { font-size: 13px; font-weight: 500; }
+  .sms-thread-meta { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+  .sms-bubble {
+    background: var(--bg-surface);
+    border-radius: 18px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.4;
+    max-width: 85%;
+    margin-bottom: 4px;
+    border: 0.5px solid var(--border-light);
+  }
+  .sms-bubble.incoming {
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .sms-bubble.outgoing {
+    align-self: flex-end;
+    background: var(--l2-stroke);
+    color: white;
+    border-bottom-right-radius: 4px;
+    border-color: var(--l2-stroke);
+  }
+  .sms-thread { display: flex; flex-direction: column; gap: 4px; padding: 0 8px; }
+  .sms-timestamp {
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    margin: 8px 0;
+  }
+  .sms-link {
+    display: inline-block;
+    background: var(--bg-secondary);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--l2-text);
+    border: 0.5px solid var(--border-mid);
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .sms-link:hover { background: var(--l2-fill); }
+  .sms-link i { font-size: 14px; vertical-align: -2px; margin-right: 4px; }
+
+  /* QUOTE */
+  .quote-doc {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border-light);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .quote-letterhead {
+    border-bottom: 2px solid var(--navy);
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+  }
+  .quote-company { font-size: 18px; font-weight: 500; color: var(--navy); }
+  .quote-tagline { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+  .quote-doc-title {
+    font-size: 13px;
+    font-weight: 500;
+    margin: 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--navy);
+  }
+  .quote-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    font-size: 11px;
+    margin-bottom: 14px;
+  }
+  .quote-meta-block {
+    background: var(--bg-secondary);
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+  }
+  .quote-meta-label {
+    font-size: 9px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .quote-meta-value { font-size: 11px; line-height: 1.4; }
+  .quote-section { margin-bottom: 14px; }
+  .quote-section-h {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 0.5px solid var(--border-light);
+  }
+  .quote-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .quote-table td {
+    padding: 6px 4px;
+    border-bottom: 0.5px solid var(--border-light);
+    vertical-align: top;
+  }
+  .quote-table .desc { width: 60%; }
+  .quote-table .qty { width: 15%; text-align: center; }
+  .quote-table .amt { width: 25%; text-align: right; font-variant-numeric: tabular-nums; }
+  .quote-table th {
+    text-align: left;
+    padding: 6px 4px;
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    border-bottom: 0.5px solid var(--border-mid);
+  }
+  .quote-table th.center { text-align: center; }
+  .quote-table th.right { text-align: right; }
+  .quote-totals {
+    margin-top: 10px;
+    border-top: 0.5px solid var(--border-mid);
+    padding-top: 8px;
+  }
+  .quote-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 4px;
+    font-size: 11px;
+  }
+  .quote-total-row.grand {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--navy);
+    padding-top: 8px;
+    border-top: 0.5px solid var(--border-mid);
+    margin-top: 4px;
+  }
+  .quote-notes {
+    background: var(--bg-secondary);
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    margin-top: 12px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .quote-table tr.tappable-field { cursor: pointer; transition: background 0.15s; }
+  .quote-table tr.tappable-field:hover { background: var(--bg-secondary); }
+  .quote-table tr.tappable-field td { position: relative; }
+  .quote-table tr.tappable-field td.desc::after {
+    content: '\\eb04'; /* ti-edit */
+    font-family: 'tabler-icons';
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .quote-table tr.tappable-field:hover td.desc::after { opacity: 1; }
+
+  /* QUOTE ACTION BAR — sticky at bottom of scroll */
+  .quote-action-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-page);
+    padding: 12px 0;
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr;
+    gap: 8px;
+    border-top: 0.5px solid var(--border-light);
+    margin: 0 -14px;
+    padding-left: 14px;
+    padding-right: 14px;
+    z-index: 10;
+  }
+  .quote-btn {
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 14px 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .quote-btn.approve {
+    background: var(--green-stroke);
+    color: white;
+  }
+  .quote-btn.approve:hover { background: var(--green-deep); }
+  .quote-btn.revise {
+    background: var(--bg-surface);
+    color: var(--navy);
+    border: 1px solid var(--navy);
+  }
+  .quote-btn.revise:hover { background: var(--bg-secondary); }
+  .quote-btn.reject {
+    background: var(--bg-surface);
+    color: var(--l1-text);
+    border: 1px solid var(--l1-stroke);
+  }
+  .quote-btn.reject:hover { background: var(--l1-fill); }
+
+  /* EDIT MODE */
+  .edit-line-item {
+    display: grid;
+    grid-template-columns: 1fr 50px 80px 24px;
+    gap: 6px;
+    margin-bottom: 6px;
+    align-items: center;
+  }
+  .edit-input {
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border-mid);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    font-size: 11px;
+    font-family: inherit;
+    width: 100%;
+  }
+  .edit-input:focus {
+    outline: none;
+    border-color: var(--navy);
+    background: var(--bg-surface);
+  }
+  .edit-input.amt {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .edit-input.focused-highlight {
+    border-color: var(--navy);
+    background: var(--bg-surface);
+    box-shadow: 0 0 0 2px rgba(33, 41, 92, 0.2);
+  }
+  .edit-line-delete {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .edit-line-delete:hover { background: var(--l1-fill); color: var(--l1-stroke); }
+  .edit-add-row {
+    background: transparent;
+    border: 1px dashed var(--border-mid);
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    font-size: 11px;
+    cursor: pointer;
+    width: 100%;
+    color: var(--text-secondary);
+    font-family: inherit;
+    margin-top: 4px;
+  }
+  .edit-add-row:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+  }
+  .modal {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    width: 100%;
+    max-width: 340px;
+  }
+  .modal-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+  .modal-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .modal-textarea {
+    width: 100%;
+    min-height: 80px;
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border-mid);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    font-size: 12px;
+    font-family: inherit;
+    resize: vertical;
+    margin-bottom: 12px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .modal-btn {
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+  }
+  .modal-btn.secondary {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+  }
+  .modal-btn.primary {
+    background: var(--l1-stroke);
+    color: white;
+  }
+  .modal-btn.primary:hover { background: var(--l1-deep); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--green-deep);
+    color: white;
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="workspace">
+  <div class="workspace-header">
+    <div>
+      <div class="ws-title">Pipeline — Jill's Plumbing · v2</div>
+      <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 2px;">Mobile prototype · use bottom nav inside the phone for navigation</div>
+    </div>
+    <div class="ws-screen-tabs" id="screenTabs">
+      <button class="ws-tab active" data-screen="today">Today</button>
+      <button class="ws-tab" data-screen="callbacks">Callbacks</button>
+      <button class="ws-tab" data-screen="emergencies">Emergencies</button>
+      <button class="ws-tab" data-screen="quotes-queue">Quote queue</button>
+      <button class="ws-tab" data-screen="pipeline">Pipeline</button>
+      <button class="ws-tab" data-screen="conv-detail">L0 detail</button>
+      <button class="ws-tab" data-screen="calendar">Calendar</button>
+      <button class="ws-tab" data-screen="plumber-sms">Jill's SMS</button>
+      <button class="ws-tab" data-screen="quote-review">Quote review</button>
+      <button class="ws-tab" data-screen="customer-sms">Customer SMS</button>
+    </div>
+  </div>
+
+  <div class="workspace-note">
+    <strong>v2 changes:</strong> Scroll fixed on all screens (try scrolling Today to see trend metrics & Next Up). Bottom nav added inside the phone. View shortcuts row restored on Today with Pipeline urgency-dot strip. Sparklines back on metric tiles. Revenue tile = 3-way toggle (Quoted / Booked / Invoiced). Conversion tile = 2-way toggle (to Quote / to Booking). Time window now changes all data. Quote review now has tap-to-edit (tap any line item → enters Revise mode focused there). Notes + checklist added to drill-in detail cards. Closed conversations restored prominently on Pipeline screen.
+  </div>
+
+  <div class="device">
+    <div class="device-screen" id="deviceScreen">
+      <div class="status-bar">
+        <span id="statusTime">2:18</span>
+        <div class="status-bar-right">
+          <i class="ti ti-signal-4"></i>
+          <i class="ti ti-wifi"></i>
+          <i class="ti ti-battery-3"></i>
+        </div>
+      </div>
+      <div id="screenHeader"></div>
+      <div id="screenContent" class="app-content"></div>
+      <div id="bottomNav"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  currentScreen: 'today',
+  timeWindow: 'today',
+  timeWindowMenuOpen: false,
+  dayOffset: 0,
+  conversionAccordion: false,
+  revenueAccordion: false,
+  conversionPeriod: '7d',
+  revenuePeriod: '7d',
+  conversionVariant: 'booking', // 'quote' or 'booking'
+  revenueVariant: 'quoted', // 'quoted' | 'booked' | 'invoiced'
+  todayJobsExpanded: false,
+  closedExpanded: false,
+  calendarMode: 'month',
+  selectedCalDay: null,
+  quoteMode: 'review',
+  showRejectModal: false,
+  quoteEdits: null,
+  focusedField: null, // for tap-to-edit-and-focus
+  notesData: {
+    'marta': {
+      text: '',
+      checklist: {
+        'called': false,
+        'voicemail': false,
+        'enbridge_confirmed': false,
+        'rescheduled': false,
+        'closed': false,
+      },
+    },
+    'james': {
+      text: '',
+      checklist: {
+        'called': false,
+        'voicemail': false,
+        'sub_assigned': false,
+        'eta_given': false,
+        'closed': false,
+      },
+    },
+  },
+};
+
+// Time-window-aware data
+const timeWindowData = {
+  today: {
+    label: () => {
+      if (state.dayOffset === 0) return 'Today · Tue, May 26';
+      if (state.dayOffset === -1) return 'Yesterday · Mon, May 25';
+      if (state.dayOffset === 1) return 'Tomorrow · Wed, May 27';
+      const date = new Date(2026, 4, 26 + state.dayOffset);
+      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    },
+    tier0: () => {
+      if (state.dayOffset === 0) return { l0: { count: 1, age: 'Oldest: 4 min ago' }, l1: { count: 1, age: 'Oldest: 12 min ago' }, quote: { count: 2, age: 'Oldest: 38 min ago' } };
+      if (state.dayOffset === -1) return { l0: { count: 0, age: '—' }, l1: { count: 0, age: '—' }, quote: { count: 0, age: '—' } };
+      if (state.dayOffset === 1) return { l0: { count: 0, age: '—' }, l1: { count: 0, age: '—' }, quote: { count: 0, age: '—' } };
+      return { l0: { count: 0, age: '—' }, l1: { count: 0, age: '—' }, quote: { count: 0, age: '—' } };
+    },
+    metrics: () => {
+      if (state.dayOffset === 0) {
+        return {
+          newConv: { value: 9, sub: 'L1: 1 · L2: 3 · L3: 4 · L0: 1' },
+          bookings: { value: 5, sub: '3 done · 2 ahead' },
+          conversion: {
+            quote: { value: '78%', sub: '7 of 9 → quoted' },
+            booking: { value: '67%', sub: '6 of 9 → booked' },
+          },
+          revenue: {
+            quoted: { value: '$3,840', sub: '4 quotes today' },
+            booked: { value: '$2,295', sub: '3 of 4 confirmed' },
+            invoiced: { value: '$1,420', sub: '3 jobs completed' },
+          },
+        };
+      }
+      if (state.dayOffset === -1) {
+        return {
+          newConv: { value: 12, sub: 'L1: 0 · L2: 4 · L3: 7 · L0: 1' },
+          bookings: { value: 7, sub: 'All complete' },
+          conversion: {
+            quote: { value: '83%', sub: '10 of 12 → quoted' },
+            booking: { value: '58%', sub: '7 of 12 → booked' },
+          },
+          revenue: {
+            quoted: { value: '$3,480', sub: '5 quotes' },
+            booked: { value: '$3,290', sub: '4 of 5 confirmed' },
+            invoiced: { value: '$2,940', sub: '7 jobs completed' },
+          },
+        };
+      }
+      if (state.dayOffset === 1) {
+        return {
+          newConv: { value: 0, sub: 'Tomorrow' },
+          bookings: { value: 4, sub: 'Scheduled' },
+          conversion: { quote: { value: '—', sub: 'No data' }, booking: { value: '—', sub: 'No data' } },
+          revenue: {
+            quoted: { value: '—', sub: 'No data yet' },
+            booked: { value: '$2,180', sub: '4 jobs booked' },
+            invoiced: { value: '—', sub: 'Future date' },
+          },
+        };
+      }
+      return {
+        newConv: { value: 0, sub: '—' },
+        bookings: { value: 0, sub: '—' },
+        conversion: { quote: { value: '—', sub: '—' }, booking: { value: '—', sub: '—' } },
+        revenue: { quoted: { value: '—', sub: '—' }, booked: { value: '—', sub: '—' }, invoiced: { value: '—', sub: '—' } },
+      };
+    },
+  },
+  '7d': {
+    label: () => 'Last 7 days',
+    tier0: () => ({ l0: { count: 1, age: 'Oldest: 4 min ago' }, l1: { count: 1, age: 'Oldest: 12 min ago' }, quote: { count: 2, age: 'Oldest: 38 min ago' } }),
+    metrics: () => ({
+      newConv: { value: 64, sub: 'L1: 4 · L2: 18 · L3: 39 · L0: 3' },
+      bookings: { value: 38, sub: '36 done · 2 ahead' },
+      conversion: {
+        quote: { value: '80%', sub: '51 of 64 → quoted' },
+        booking: { value: '61%', sub: '39 of 64 → booked' },
+      },
+      revenue: {
+        quoted: { value: '$18,420', sub: '23 quotes' },
+        booked: { value: '$14,280', sub: '18 of 23 won' },
+        invoiced: { value: '$11,840', sub: '15 jobs paid' },
+      },
+    }),
+  },
+  '30d': {
+    label: () => 'Last 30 days',
+    tier0: () => ({ l0: { count: 1, age: 'Oldest: 4 min ago' }, l1: { count: 1, age: 'Oldest: 12 min ago' }, quote: { count: 2, age: 'Oldest: 38 min ago' } }),
+    metrics: () => ({
+      newConv: { value: 247, sub: 'L1: 14 · L2: 71 · L3: 154 · L0: 8' },
+      bookings: { value: 152, sub: '149 done · 3 ahead' },
+      conversion: {
+        quote: { value: '77%', sub: '190 of 247 → quoted' },
+        booking: { value: '62%', sub: '153 of 247 → booked' },
+      },
+      revenue: {
+        quoted: { value: '$72,840', sub: '92 quotes' },
+        booked: { value: '$56,420', sub: '72 of 92 won' },
+        invoiced: { value: '$48,320', sub: '63 jobs paid' },
+      },
+    }),
+  },
+};
+
+// Quote demo data
+const quoteData = {
+  customer: {
+    name: 'Priya Ramaswamy',
+    phone: '+1 (905) 555-0273',
+    email: 'priya.r@email.com',
+    address: '184 Cherrywood Ave, Etobicoke, ON M9A 2T9',
+  },
+  quoteNumber: 'JP-2026-0341',
+  date: 'May 26, 2026',
+  validUntil: 'June 9, 2026',
+  problem: 'Toilet replacement — master bathroom. Existing two-piece toilet leaking at base; flange in serviceable condition; customer supplying new fixture (Toto Drake II in white).',
+  materials: [
+    { desc: 'Wax ring with horn (premium)', qty: 1, amount: 12 },
+    { desc: 'Toilet bolts and caps, brass', qty: 1, amount: 8 },
+    { desc: 'Shut-off valve replacement (1/4-turn ball valve, 3/8")', qty: 1, amount: 24 },
+    { desc: 'Braided stainless supply line, 12"', qty: 1, amount: 18 },
+    { desc: 'Toilet flange repair ring (precautionary)', qty: 1, amount: 16 },
+    { desc: 'Caulk (white silicone, mildew-resistant)', qty: 1, amount: 9 },
+    { desc: 'Misc. fasteners and shims', qty: 1, amount: 8 },
+  ],
+  labour: [
+    { desc: 'Remove existing toilet, inspect flange and waste pipe', qty: 1, amount: 110 },
+    { desc: 'Install new toilet (customer-supplied), seal and test', qty: 1, amount: 165 },
+    { desc: 'Replace shut-off valve and supply line', qty: 1, amount: 75 },
+    { desc: 'Caulk, clean-up, haul-away of old fixture', qty: 1, amount: 55 },
+  ],
+  taxRate: 0.13,
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
+function calcTotals(data) {
+  const materialsSubtotal = data.materials.reduce((s, m) => s + (Number(m.amount) || 0), 0);
+  const labourSubtotal = data.labour.reduce((s, l) => s + (Number(l.amount) || 0), 0);
+  const subtotal = materialsSubtotal + labourSubtotal;
+  const tax = Math.round(subtotal * data.taxRate * 100) / 100;
+  const total = Math.round((subtotal + tax) * 100) / 100;
+  return { materialsSubtotal, labourSubtotal, subtotal, tax, total };
+}
+function fmt$(n) {
+  const v = Number(n) || 0;
+  return '$' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ============================================================
+// SPARKLINE
+// ============================================================
+function sparkline(data, strokeColor, fillColor, opts = {}) {
+  const w = opts.w || 160;
+  const h = opts.h || 30;
+  const pad = 2;
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const xStep = (w - pad * 2) / (data.length - 1);
+
+  let path = '';
+  let area = '';
+  data.forEach((v, i) => {
+    const x = pad + i * xStep;
+    const y = h - pad - ((v - min) / range) * (h - pad * 2);
+    if (i === 0) {
+      path += `M ${x} ${y}`;
+      area += `M ${x} ${h - pad} L ${x} ${y}`;
+    } else {
+      path += ` L ${x} ${y}`;
+      area += ` L ${x} ${y}`;
+    }
+  });
+  area += ` L ${pad + (data.length - 1) * xStep} ${h - pad} Z`;
+
+  const lastX = pad + (data.length - 1) * xStep;
+  const lastY = h - pad - ((data[data.length-1] - min) / range) * (h - pad * 2);
+
+  return `
+    <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+      <path d="${area}" fill="${fillColor}" opacity="0.5"/>
+      <path d="${path}" fill="none" stroke="${strokeColor}" stroke-width="${opts.strokeWidth || 1.5}" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${lastX}" cy="${lastY}" r="${opts.dotR || 2}" fill="${strokeColor}"/>
+    </svg>
+  `;
+}
+
+function getSparkData(metric, period) {
+  const sparkData = {
+    conversion_quote_7d: [72, 75, 78, 76, 79, 81, 80],
+    conversion_quote_30d: [68, 70, 72, 71, 73, 75, 74, 76, 78, 75, 77, 79, 80, 78, 76, 78, 80, 82, 80, 78, 79, 81, 80, 78, 80, 82, 79, 80, 81, 80],
+    conversion_booking_7d: [55, 58, 62, 60, 57, 64, 67],
+    conversion_booking_30d: [42, 45, 48, 50, 52, 55, 53, 58, 60, 57, 62, 65, 63, 60, 64, 66, 68, 65, 67, 64, 62, 65, 67, 64, 63, 65, 68, 64, 67, 67],
+    revenue_quoted_7d: [2100, 2680, 1840, 3220, 2950, 3480, 3840],
+    revenue_quoted_30d: [1800, 2100, 2400, 2200, 2680, 1900, 2300, 2680, 2100, 2900, 3120, 2840, 3340, 3100, 2700, 3220, 2950, 2480, 3480, 3140, 3290, 3540, 3220, 2810, 3680, 3420, 3140, 3520, 3760, 3840],
+    revenue_booked_7d: [1680, 2100, 1340, 2520, 2350, 2680, 2880],
+    revenue_booked_30d: [1400, 1620, 1900, 1700, 2080, 1500, 1800, 2080, 1700, 2300, 2420, 2240, 2640, 2400, 2100, 2520, 2350, 1900, 2680, 2440, 2540, 2740, 2520, 2210, 2880, 2680, 2440, 2740, 2920, 2880],
+    revenue_invoiced_7d: [1400, 1880, 1100, 2200, 2050, 2380, 2580],
+    revenue_invoiced_30d: [1200, 1380, 1620, 1480, 1780, 1300, 1540, 1820, 1480, 2020, 2140, 1960, 2340, 2120, 1840, 2240, 2080, 1670, 2380, 2160, 2240, 2440, 2240, 1950, 2580, 2380, 2140, 2440, 2620, 2580],
+  };
+  return sparkData[`${metric}_${period}`] || [];
+}
+
+// ============================================================
+// SCREEN RENDERERS
+// ============================================================
+function renderScreenHeader(title, subtitle, withBack = false, backTo = null) {
+  return `
+    <div class="app-header ${withBack ? 'with-back' : ''}">
+      ${withBack ? `<button class="back-btn" onclick="setScreen('${backTo}')"><i class="ti ti-chevron-left"></i></button>` : ''}
+      <div style="flex:1;">
+        <div class="app-title" style="font-size:${withBack ? '18px' : '22px'};">${title}</div>
+        <div class="app-subtitle">${subtitle}</div>
+      </div>
+      ${!withBack ? `
+        <button class="header-action" aria-label="Notifications"><i class="ti ti-bell"></i></button>
+        <button class="header-action" aria-label="Settings"><i class="ti ti-settings"></i></button>
+      ` : ''}
+    </div>
+  `;
+}
+
+// Bottom nav (in-phone)
+function renderBottomNav() {
+  const screens = [
+    { id: 'today', icon: 'ti-home', label: 'Today', badge: 4 },
+    { id: 'pipeline', icon: 'ti-list-details', label: 'Pipeline', badge: 12 },
+    { id: 'calendar', icon: 'ti-calendar', label: 'Calendar' },
+    { id: 'plumber-sms', icon: 'ti-message', label: 'Messages', badge: 3, amber: true },
+  ];
+  const activeId = ['callbacks', 'emergencies', 'quotes-queue', 'conv-detail', 'quote-review'].includes(state.currentScreen) ? 'today'
+    : ['customer-sms'].includes(state.currentScreen) ? 'plumber-sms'
+    : state.currentScreen;
+  return `
+    <div class="bottom-nav">
+      ${screens.map((s) => `
+        <button class="nav-btn ${s.id === activeId ? 'active' : ''}" onclick="setScreen('${s.id}')">
+          <i class="ti ${s.icon}"></i>
+          <span>${s.label}</span>
+          ${s.badge ? `<span class="nav-badge ${s.amber ? 'amber' : ''}">${s.badge}</span>` : ''}
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ============================================================
+// TODAY SCREEN
+// ============================================================
+function renderTimeWindow() {
+  const showArrows = state.timeWindow === 'today';
+  const arrowsHtml = showArrows ? `
+    <button class="tw-arrow" onclick="adjustDay(-1)" aria-label="Previous day">
+      <i class="ti ti-chevron-left"></i>
+    </button>
+  ` : '<div style="width:30px;"></div>';
+  const forwardHtml = showArrows ? `
+    <button class="tw-arrow" onclick="adjustDay(1)" aria-label="Next day">
+      <i class="ti ti-chevron-right"></i>
+    </button>
+  ` : '<div style="width:30px;"></div>';
+  return `
+    <div class="time-window">
+      ${arrowsHtml}
+      <button class="tw-current" onclick="event.stopPropagation(); toggleTimeWindow()">
+        <i class="ti ti-calendar-time" style="font-size:14px;"></i>
+        <span>${timeWindowData[state.timeWindow].label()}</span>
+        <i class="ti ti-chevron-down" style="font-size:14px;"></i>
+      </button>
+      ${forwardHtml}
+      ${state.timeWindowMenuOpen ? `
+        <div class="tw-menu">
+          <button class="tw-menu-item ${state.timeWindow === 'today' ? 'selected' : ''}" onclick="setTimeWindow('today')">Today</button>
+          <button class="tw-menu-item ${state.timeWindow === '7d' ? 'selected' : ''}" onclick="setTimeWindow('7d')">Last 7 days</button>
+          <button class="tw-menu-item ${state.timeWindow === '30d' ? 'selected' : ''}" onclick="setTimeWindow('30d')">Last 30 days</button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderViewShortcuts() {
+  return `
+    <div class="view-shortcut-row">
+      <button class="view-shortcut" onclick="setScreen('pipeline')">
+        <div class="view-shortcut-icon"><i class="ti ti-list-details"></i></div>
+        <div class="view-shortcut-text">
+          <div class="view-shortcut-title">Pipeline</div>
+          <div class="view-shortcut-sub">12 active leads</div>
+          <div class="view-shortcut-pip">
+            <span class="pip-dot pip-l0" title="L0"></span>
+            <span class="pip-dot pip-l1" title="L1"></span>
+            <span class="pip-dot pip-l2" title="L2"></span>
+            <span class="pip-dot pip-l2" title="L2"></span>
+            <span class="pip-dot pip-l3" title="L3"></span>
+            <span class="pip-dot pip-l3" title="L3"></span>
+            <span class="pip-dot pip-l3" title="L3"></span>
+            <span class="pip-dot pip-l3" title="L3"></span>
+          </div>
+        </div>
+        <i class="ti ti-chevron-right" style="color: var(--text-tertiary);"></i>
+      </button>
+      <button class="view-shortcut" onclick="setScreen('calendar')">
+        <div class="view-shortcut-icon"><i class="ti ti-calendar"></i></div>
+        <div class="view-shortcut-text">
+          <div class="view-shortcut-title">Schedule</div>
+          <div class="view-shortcut-sub">5 today · 7 tomorrow</div>
+          <div class="view-shortcut-sub" style="margin-top: 4px; font-size: 10px;">Next: 2:30 PM · Mira P.</div>
+        </div>
+        <i class="ti ti-chevron-right" style="color: var(--text-tertiary);"></i>
+      </button>
+    </div>
+  `;
+}
+
+function renderTier0() {
+  const t0 = timeWindowData[state.timeWindow].tier0();
+  return `
+    <div class="tier0-strip">
+      <button class="tier0-card ${t0.l0.count > 0 ? 'active-l0' : 'idle'}" onclick="setScreen('callbacks')">
+        <div class="tier0-label">Safety escalation — welfare follow-up</div>
+        <div class="tier0-count">${t0.l0.count}</div>
+        <div class="tier0-age">${t0.l0.age}</div>
+      </button>
+      <button class="tier0-card ${t0.l1.count > 0 ? 'active-l1' : 'idle'}" onclick="setScreen('emergencies')">
+        <div class="tier0-label">Emergency — dispatch decision</div>
+        <div class="tier0-count">${t0.l1.count}</div>
+        <div class="tier0-age">${t0.l1.age}</div>
+      </button>
+      <button class="tier0-card ${t0.quote.count > 0 ? 'active-quote' : 'idle'}" onclick="setScreen('quotes-queue')">
+        <div class="tier0-label">Quote awaiting your approval</div>
+        <div class="tier0-count">${t0.quote.count}</div>
+        <div class="tier0-age">${t0.quote.age}</div>
+      </button>
+    </div>
+  `;
+}
+
+function renderTier1() {
+  const m = timeWindowData[state.timeWindow].metrics();
+  const periodKey = state.timeWindow === '30d' ? '30d' : '7d';
+
+  const convVariant = state.conversionVariant;
+  const convValue = m.conversion[convVariant].value;
+  const convSub = m.conversion[convVariant].sub;
+  const convSpark = getSparkData(`conversion_${convVariant}`, periodKey);
+
+  const revVariant = state.revenueVariant;
+  const revValue = m.revenue[revVariant].value;
+  const revSub = m.revenue[revVariant].sub;
+  const revSpark = getSparkData(`revenue_${revVariant}`, periodKey);
+
+  const sectionLabel = state.timeWindow === 'today'
+    ? (state.dayOffset === 0 ? "Today's snapshot" : 'Snapshot')
+    : `${state.timeWindow === '7d' ? 'Last 7 days' : 'Last 30 days'} snapshot`;
+
+  return `
+    <div class="section-row">
+      <div class="section-h">${sectionLabel}</div>
+    </div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-label">New conversations</div>
+        <div class="metric-value">${m.newConv.value}</div>
+        <div class="metric-sub">${m.newConv.sub}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Bookings</div>
+        <div class="metric-value">${m.bookings.value}</div>
+        <div class="metric-sub">${m.bookings.sub}</div>
+      </div>
+
+      <div class="metric-card tappable green-highlight" onclick="toggleAccordion('conversion')">
+        <div class="metric-label">
+          <span>Conversion · to ${convVariant === 'quote' ? 'quote' : 'booking'}</span>
+          <i class="ti ti-chevron-${state.conversionAccordion ? 'up' : 'down'}" style="font-size:12px;"></i>
+        </div>
+        <div class="metric-value">${convValue}</div>
+        <div class="metric-sub">${convSub}</div>
+        ${convSpark.length > 0 ? `<div class="metric-sparkline">${sparkline(convSpark, '#27500A', '#C0DD97')}</div>` : ''}
+        <div class="metric-variant-toggle" onclick="event.stopPropagation();">
+          <button class="metric-variant-btn ${convVariant === 'quote' ? 'active' : ''}" onclick="setMetricVariant('conversion', 'quote')">To quote</button>
+          <button class="metric-variant-btn ${convVariant === 'booking' ? 'active' : ''}" onclick="setMetricVariant('conversion', 'booking')">To booking</button>
+        </div>
+      </div>
+
+      <div class="metric-card tappable" onclick="toggleAccordion('revenue')">
+        <div class="metric-label">
+          <span>Revenue · ${revVariant}</span>
+          <i class="ti ti-chevron-${state.revenueAccordion ? 'up' : 'down'}" style="font-size:12px;"></i>
+        </div>
+        <div class="metric-value">${revValue}</div>
+        <div class="metric-sub">${revSub}</div>
+        ${revSpark.length > 0 ? `<div class="metric-sparkline">${sparkline(revSpark, '#21295C', '#B5D4F4')}</div>` : ''}
+        <div class="metric-variant-toggle" onclick="event.stopPropagation();">
+          <button class="metric-variant-btn ${revVariant === 'quoted' ? 'active' : ''}" onclick="setMetricVariant('revenue', 'quoted')">Quoted</button>
+          <button class="metric-variant-btn ${revVariant === 'booked' ? 'active' : ''}" onclick="setMetricVariant('revenue', 'booked')">Booked</button>
+          <button class="metric-variant-btn ${revVariant === 'invoiced' ? 'active' : ''}" onclick="setMetricVariant('revenue', 'invoiced')">Invoiced</button>
+        </div>
+      </div>
+
+      ${state.conversionAccordion ? renderAccordion('conversion') : ''}
+      ${state.revenueAccordion ? renderAccordion('revenue') : ''}
+    </div>
+  `;
+}
+
+function renderAccordion(type) {
+  if (type === 'conversion') {
+    const period = state.conversionPeriod;
+    const variant = state.conversionVariant;
+    const data = getSparkData(`conversion_${variant}`, period);
+    const avg = Math.round(data.reduce((s, v) => s + v, 0) / data.length);
+    const max = Math.max(...data);
+    const min = Math.min(...data);
+    const labelStart = period === '7d' ? 'May 20' : 'Apr 27';
+    return `
+      <div class="accordion-expand">
+        <div class="accordion-tabs">
+          <button class="accordion-tab ${period === '7d' ? 'active' : ''}" onclick="setAccordionPeriod('conversion', '7d')">7 days</button>
+          <button class="accordion-tab ${period === '30d' ? 'active' : ''}" onclick="setAccordionPeriod('conversion', '30d')">30 days</button>
+        </div>
+        <div style="font-size: 10px; color: var(--text-secondary); margin-bottom: 4px;">Conversion to ${variant === 'quote' ? 'quote' : 'booking'}</div>
+        <div class="mini-chart">
+          ${sparkline(data, '#3B6D11', '#C0DD97', { strokeWidth: 2, dotR: 3 })}
+        </div>
+        <div class="chart-stats">
+          <span>${labelStart}</span>
+          <span>Avg ${avg}% · High ${max}% · Low ${min}%</span>
+          <span>May 26</span>
+        </div>
+      </div>
+    `;
+  } else {
+    const period = state.revenuePeriod;
+    const variant = state.revenueVariant;
+    const data = getSparkData(`revenue_${variant}`, period);
+    const total = data.reduce((s, v) => s + v, 0);
+    const avg = Math.round(total / data.length);
+    const labelStart = period === '7d' ? 'May 20' : 'Apr 27';
+    return `
+      <div class="accordion-expand">
+        <div class="accordion-tabs">
+          <button class="accordion-tab ${period === '7d' ? 'active' : ''}" onclick="setAccordionPeriod('revenue', '7d')">7 days</button>
+          <button class="accordion-tab ${period === '30d' ? 'active' : ''}" onclick="setAccordionPeriod('revenue', '30d')">30 days</button>
+        </div>
+        <div style="font-size: 10px; color: var(--text-secondary); margin-bottom: 4px;">Revenue ${variant}</div>
+        <div class="mini-chart">
+          ${sparkline(data, '#21295C', '#B5D4F4', { strokeWidth: 2, dotR: 3 })}
+        </div>
+        <div class="chart-stats">
+          <span>${labelStart}</span>
+          <span>Total ${fmt$(total)} · Avg ${fmt$(avg)}/day</span>
+          <span>May 26</span>
+        </div>
+      </div>
+    `;
+  }
+}
+
+function renderNextUp() {
+  return `
+    <div class="section-row">
+      <div class="section-h">Next up</div>
+      <button class="section-action" onclick="setScreen('calendar')">
+        <i class="ti ti-calendar"></i>
+        <span>Calendar</span>
+      </button>
+    </div>
+    <div class="next-job-card" onclick="toggleAccordion('todayJobs')">
+      <div class="next-job-time">${state.todayJobsExpanded ? 'Today' : '2:30 PM'}</div>
+      <div class="next-job-info">
+        ${state.todayJobsExpanded
+          ? `<div class="next-job-name">5 bookings · 3 done, 2 ahead</div><div class="next-job-detail">Tap to collapse</div>`
+          : `<div class="next-job-name">Mira Patel — water heater leaking</div><div class="next-job-detail">847 Davenport Rd · L2 · Booked yesterday</div>`
+        }
+      </div>
+      <i class="ti ti-chevron-${state.todayJobsExpanded ? 'up' : 'down'} next-job-action"></i>
+    </div>
+    ${state.todayJobsExpanded ? `
+      <div class="day-bookings">
+        <div class="day-booking-row">
+          <div class="day-booking-time">9:00 AM</div>
+          <div class="day-booking-name" style="opacity: 0.5; text-decoration: line-through;">Andre Khan — kitchen sink leak</div>
+          <span class="day-booking-urg urg-pill-l3">Done</span>
+        </div>
+        <div class="day-booking-row">
+          <div class="day-booking-time">11:00 AM</div>
+          <div class="day-booking-name" style="opacity: 0.5; text-decoration: line-through;">Eli Nakamura — toilet running</div>
+          <span class="day-booking-urg urg-pill-l3">Done</span>
+        </div>
+        <div class="day-booking-row">
+          <div class="day-booking-time">1:00 PM</div>
+          <div class="day-booking-name" style="opacity: 0.5; text-decoration: line-through;">Sofia Bertelli — faucet replacement</div>
+          <span class="day-booking-urg urg-pill-l3">Done</span>
+        </div>
+        <div class="day-booking-row" style="background: var(--l2-fill); border: 1px solid var(--l2-stroke);">
+          <div class="day-booking-time">2:30 PM</div>
+          <div class="day-booking-name">Mira Patel — water heater leaking</div>
+          <span class="day-booking-urg urg-pill-l2">L2</span>
+        </div>
+        <div class="day-booking-row">
+          <div class="day-booking-time">4:00 PM</div>
+          <div class="day-booking-name">Daniel Cho — dishwasher install</div>
+          <span class="day-booking-urg urg-pill-l3">L3</span>
+        </div>
+      </div>
+    ` : `
+      <div class="next-job-card">
+        <div class="next-job-time">4:00 PM</div>
+        <div class="next-job-info">
+          <div class="next-job-name">Daniel Cho — dishwasher install</div>
+          <div class="next-job-detail">142 Roncesvalles Ave · L3 · Quoted $480</div>
+        </div>
+        <i class="ti ti-chevron-right next-job-action"></i>
+      </div>
+    `}
+  `;
+}
+
+function renderTodayContent() {
+  return `
+    ${renderTimeWindow()}
+    ${renderViewShortcuts()}
+    ${renderTier0()}
+    ${renderTier1()}
+    ${renderNextUp()}
+  `;
+}
+
+// ============================================================
+// NOTES + CHECKLIST renderer (shared by callbacks/emergencies)
+// ============================================================
+function renderNotesAndChecklist(personId, items) {
+  const notes = state.notesData[personId] || { text: '', checklist: {} };
+  const time = '2:18 PM'; // mock timestamp for demo
+  return `
+    <div class="notes-section">
+      <div class="notes-label">Quick actions</div>
+      <div class="checklist">
+        ${items.map((item) => `
+          <button class="checklist-item ${notes.checklist[item.key] ? 'checked' : ''}" onclick="toggleChecklistItem('${personId}', '${item.key}')">
+            <span class="check-box"></span>
+            <span class="checklist-label">${item.label}</span>
+            ${notes.checklist[item.key] ? `<span class="checklist-timestamp">${time}</span>` : ''}
+          </button>
+        `).join('')}
+      </div>
+
+      <div class="notes-label" style="margin-top: 14px;">Notes</div>
+      <textarea
+        class="notes-textarea"
+        placeholder="Add a note — outcome of the call, customer concern, follow-up needed, anything to remember…"
+        oninput="updateNote('${personId}', this.value)"
+      >${notes.text}</textarea>
+    </div>
+  `;
+}
+
+// ============================================================
+// CALLBACKS / EMERGENCIES / QUOTES screens
+// ============================================================
+function renderCallbacksContent() {
+  return `
+    <div class="filter-context l0">
+      <i class="ti ti-shield-exclamation"></i>
+      <div>Customers directed to outside help. Call back to confirm safety.</div>
+    </div>
+
+    <div class="drill-row l0">
+      <div class="drill-top">
+        <div class="avatar l0">MH</div>
+        <div class="drill-name" onclick="setScreen('conv-detail')" style="cursor: pointer;">Marta Hennings</div>
+        <div class="drill-time">4 min ago</div>
+      </div>
+      <div class="drill-grid">
+        <div class="drill-field"><span class="drill-field-label">Phone</span><span class="drill-field-value">+1 (416) 555-0142</span></div>
+        <div class="drill-field"><span class="drill-field-label">Email</span><span class="drill-field-value">m.hennings@email.com</span></div>
+        <div class="drill-field"><span class="drill-field-label">Urgency</span><span class="drill-field-value">L0 OOS — safety</span></div>
+        <div class="drill-field"><span class="drill-field-label">Directed to</span><span class="drill-field-value">Enbridge — 1-866-763-5427</span></div>
+        <div class="drill-field"><span class="drill-field-label">Reason</span><span class="drill-field-value">Strong gas smell in basement. Customer confirmed evacuation before call ended.</span></div>
+      </div>
+
+      ${renderNotesAndChecklist('marta', [
+        { key: 'called', label: 'Called customer' },
+        { key: 'voicemail', label: 'Left voicemail' },
+        { key: 'enbridge_confirmed', label: 'Confirmed Enbridge cleared the home' },
+        { key: 'rescheduled', label: 'Discussed follow-up service' },
+        { key: 'closed', label: 'Welfare confirmed · close loop' },
+      ])}
+
+      <div class="drill-actions">
+        <button class="drill-btn primary" onclick="showToast('Dialing Marta Hennings…')">
+          <i class="ti ti-phone"></i>Call now
+        </button>
+        <button class="drill-btn" onclick="setScreen('conv-detail')">
+          <i class="ti ti-eye"></i>Transcript
+        </button>
+        <button class="drill-btn" onclick="showToast('Marked as called. Welfare follow-up complete.')">
+          <i class="ti ti-check"></i>Mark done
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function renderEmergenciesContent() {
+  return `
+    <div class="filter-context l1">
+      <i class="ti ti-flame"></i>
+      <div>Active emergencies awaiting your call.</div>
+    </div>
+
+    <div class="drill-row l1">
+      <div class="drill-top">
+        <div class="avatar l1">JO</div>
+        <div class="drill-name">James Okafor</div>
+        <div class="drill-time">12 min ago</div>
+      </div>
+      <div class="drill-grid">
+        <div class="drill-field"><span class="drill-field-label">Phone</span><span class="drill-field-value">+1 (647) 555-0188</span></div>
+        <div class="drill-field"><span class="drill-field-label">Address</span><span class="drill-field-value">312 Wallace Ave</span></div>
+        <div class="drill-field"><span class="drill-field-label">Urgency</span><span class="drill-field-value">L1 emergency</span></div>
+        <div class="drill-field"><span class="drill-field-label">First step</span><span class="drill-field-value">Main shutoff successful</span></div>
+        <div class="drill-field"><span class="drill-field-label">Reason</span><span class="drill-field-value">Burst pipe in basement. Water contained after main shutoff. Drywall and flooring damage visible.</span></div>
+      </div>
+
+      ${renderNotesAndChecklist('james', [
+        { key: 'called', label: 'Called customer' },
+        { key: 'voicemail', label: 'Left voicemail' },
+        { key: 'sub_assigned', label: 'Assigned to sub / tech' },
+        { key: 'eta_given', label: 'ETA confirmed with customer' },
+        { key: 'closed', label: 'Dispatch complete · close loop' },
+      ])}
+
+      <div class="drill-actions">
+        <button class="drill-btn primary" onclick="showToast('Dispatching to 312 Wallace Ave')">
+          <i class="ti ti-truck"></i>Dispatch myself
+        </button>
+        <button class="drill-btn" onclick="showToast('Looking for a sub…')">
+          <i class="ti ti-users"></i>Find a sub
+        </button>
+        <button class="drill-btn" onclick="showToast('Calling James Okafor…')">
+          <i class="ti ti-phone"></i>Call
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function renderQuotesQueueContent() {
+  return `
+    <div class="filter-context quote">
+      <i class="ti ti-file-dollar"></i>
+      <div>Approve to send to customer. Revise to edit before sending.</div>
+    </div>
+
+    <div class="drill-row quote">
+      <div class="drill-top">
+        <div class="avatar quote">PR</div>
+        <div class="drill-name" onclick="setScreen('quote-review')" style="cursor: pointer;">Priya Ramaswamy</div>
+        <div class="drill-time">38 min ago</div>
+      </div>
+      <div class="drill-grid">
+        <div class="drill-field"><span class="drill-field-label">Scope</span><span class="drill-field-value">Toilet replacement, master bath</span></div>
+        <div class="drill-field"><span class="drill-field-label">Total</span><span class="drill-field-value">$565.55 incl. HST</span></div>
+        <div class="drill-field"><span class="drill-field-label">Urgency</span><span class="drill-field-value">L3 scheduled</span></div>
+        <div class="drill-field"><span class="drill-field-label">Phone</span><span class="drill-field-value">+1 (905) 555-0273</span></div>
+      </div>
+      <div class="drill-actions">
+        <button class="drill-btn primary" onclick="setScreen('quote-review')">
+          <i class="ti ti-eye"></i>Review quote
+        </button>
+      </div>
+    </div>
+
+    <div class="drill-row quote">
+      <div class="drill-top">
+        <div class="avatar quote">BW</div>
+        <div class="drill-name">Brendan Wojcik</div>
+        <div class="drill-time">1 hr ago</div>
+      </div>
+      <div class="drill-grid">
+        <div class="drill-field"><span class="drill-field-label">Scope</span><span class="drill-field-value">Kitchen sink slow drain</span></div>
+        <div class="drill-field"><span class="drill-field-label">Total</span><span class="drill-field-value">$209.05 incl. HST</span></div>
+        <div class="drill-field"><span class="drill-field-label">Urgency</span><span class="drill-field-value">L3 scheduled</span></div>
+        <div class="drill-field"><span class="drill-field-label">Phone</span><span class="drill-field-value">+1 (416) 555-0341</span></div>
+      </div>
+      <div class="drill-actions">
+        <button class="drill-btn primary" onclick="showToast('Loading Brendan\\'s quote…')">
+          <i class="ti ti-eye"></i>Review quote
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// PIPELINE QUEUE
+// ============================================================
+function renderPipelineContent() {
+  const closedRows = state.closedExpanded ? `
+    <div class="conv-row urg-l3" style="opacity: 0.85;">
+      <div class="conv-top">
+        <div class="conv-name">Sarah Chen</div>
+        <div class="conv-time">Yesterday 4:18 PM</div>
+      </div>
+      <div class="conv-summary">Toilet flapper replacement. Completed. Invoiced $145.</div>
+      <div class="conv-bottom">
+        <span class="urg-label">L3</span>
+        <span class="status-pill">Done</span>
+      </div>
+    </div>
+    <div class="conv-row urg-l3" style="opacity: 0.85;">
+      <div class="conv-top">
+        <div class="conv-name">Marcus Levitt</div>
+        <div class="conv-time">Yesterday 1:42 PM</div>
+      </div>
+      <div class="conv-summary">Outdoor hose bib replacement. Completed. Invoiced $290.</div>
+      <div class="conv-bottom">
+        <span class="urg-label">L3</span>
+        <span class="status-pill">Done</span>
+      </div>
+    </div>
+    <div class="conv-row urg-l2" style="opacity: 0.85;">
+      <div class="conv-top">
+        <div class="conv-name">Indira Bose</div>
+        <div class="conv-time">2 days ago</div>
+      </div>
+      <div class="conv-summary">Sink leak under-counter. Completed. Invoiced $220.</div>
+      <div class="conv-bottom">
+        <span class="urg-label">L2</span>
+        <span class="status-pill">Done</span>
+      </div>
+    </div>
+    <div style="text-align: center; font-size: 11px; color: var(--text-secondary); padding: 8px;">+ 9 more closed conversations</div>
+  ` : '';
+
+  return `
+    <div class="group-header">
+      <i class="ti ti-alert-triangle" style="color: var(--l0-stroke);"></i>
+      Needs you · 4
+    </div>
+
+    <div class="conv-row urg-l0" onclick="setScreen('conv-detail')">
+      <div class="conv-top">
+        <div class="conv-name">Marta Hennings</div>
+        <div class="conv-time">4 min ago</div>
+      </div>
+      <div class="conv-summary">Strong gas smell — agent directed to Enbridge. Welfare follow-up needed.</div>
+      <div class="conv-bottom">
+        <span class="urg-label"><i class="ti ti-shield-exclamation" style="font-size:10px;"></i> L0 OOS</span>
+        <span class="status-pill needs-you">Call back</span>
+      </div>
+    </div>
+
+    <div class="conv-row urg-l1" onclick="setScreen('emergencies')">
+      <div class="conv-top">
+        <div class="conv-name">James Okafor</div>
+        <div class="conv-time">12 min ago</div>
+      </div>
+      <div class="conv-summary">Burst pipe, water shutoff successful. Awaiting dispatch decision.</div>
+      <div class="conv-bottom">
+        <span class="urg-label">L1 emergency</span>
+        <span class="status-pill needs-you">Dispatch?</span>
+      </div>
+    </div>
+
+    <div class="conv-row urg-l3" onclick="setScreen('quote-review')">
+      <div class="conv-top">
+        <div class="conv-name">Priya Ramaswamy</div>
+        <div class="conv-time">38 min ago</div>
+      </div>
+      <div class="conv-summary">Toilet replacement, master bath. Quote drafted: $565.55.</div>
+      <div class="conv-bottom">
+        <span class="urg-label">L3 scheduled</span>
+        <span class="status-pill needs-you">Approve quote</span>
+      </div>
+    </div>
+
+    <div class="conv-row urg-l3">
+      <div class="conv-top">
+        <div class="conv-name">Brendan Wojcik</div>
+        <div class="conv-time">1 hr ago</div>
+      </div>
+      <div class="conv-summary">Kitchen sink slow drain. Quote drafted: $209.05.</div>
+      <div class="conv-bottom">
+        <span class="urg-label">L3 scheduled</span>
+        <span class="status-pill needs-you">Approve quote</span>
+      </div>
+    </div>
+
+    <div class="group-header">
+      <i class="ti ti-clock"></i>
+      Customer-side · 3
+    </div>
+
+    <div class="conv-row urg-l2">
+      <div class="conv-top">
+        <div class="conv-name">Aisha Lin</div>
+        <div class="conv-time">22 min ago</div>
+      </div>
+      <div class="conv-summary">Hot water tank not heating. Calendly link sent, awaiting booking.</div>
+      <div class="conv-bottom">
+        <span class="urg-label">L2 priority</span>
+        <span class="status-pill customer-side">Awaiting booking</span>
+      </div>
+    </div>
+
+    <div class="conv-row urg-l3">
+      <div class="conv-top">
+        <div class="conv-name">Tomás Reyes</div>
+        <div class="conv-time">1 hr ago</div>
+      </div>
+      <div class="conv-summary">Faucet replacement. Quote sent: $340.</div>
+      <div class="conv-bottom">
+        <span class="urg-label">L3 scheduled</span>
+        <span class="status-pill customer-side">Quote sent</span>
+      </div>
+    </div>
+
+    <div class="conv-row urg-l3">
+      <div class="conv-top">
+        <div class="conv-name">Helen Mwangi</div>
+        <div class="conv-time">2 hr ago</div>
+      </div>
+      <div class="conv-summary">Bathroom renovation rough-in. Site visit requested.</div>
+      <div class="conv-bottom">
+        <span class="urg-label">L3 scheduled</span>
+        <span class="status-pill customer-side">Site visit pending</span>
+      </div>
+    </div>
+
+    <div class="group-header">
+      <i class="ti ti-calendar"></i>
+      Booked · 5
+    </div>
+
+    <div class="conv-row urg-l2" onclick="setScreen('calendar')">
+      <div class="conv-top">
+        <div class="conv-name">Mira Patel</div>
+        <div class="conv-time">Today 2:30 PM</div>
+      </div>
+      <div class="conv-summary">Water heater leaking. $1,840 quoted.</div>
+      <div class="conv-bottom">
+        <span class="urg-label">L2 priority</span>
+        <span class="status-pill booked">Next up</span>
+      </div>
+    </div>
+
+    <button class="closed-toggle ${state.closedExpanded ? 'open' : ''}" onclick="toggleAccordion('closed')">
+      <div class="closed-toggle-icon"><i class="ti ti-archive"></i></div>
+      <div class="closed-toggle-text">
+        <div class="closed-toggle-title">Closed · 12</div>
+        <div class="closed-toggle-sub">Tap to ${state.closedExpanded ? 'collapse' : 'see archived conversations'}</div>
+      </div>
+      <i class="ti ti-chevron-right chev"></i>
+    </button>
+    ${closedRows}
+  `;
+}
+
+// ============================================================
+// CONVERSATION DETAIL
+// ============================================================
+function renderConvDetailContent() {
+  return `
+    <div class="detail-card">
+      <div class="detail-header">
+        <div class="avatar l0">MH</div>
+        <div style="flex: 1;">
+          <div class="detail-name">Marta Hennings</div>
+          <div class="detail-meta">+1 (416) 555-0142 · m.hennings@email.com</div>
+          <div class="detail-meta">Started 4 min ago</div>
+        </div>
+        <span class="urg-label" style="background: var(--l0-stroke); color: var(--l0-fill);"><i class="ti ti-shield-exclamation" style="font-size:10px;"></i> L0</span>
+      </div>
+
+      <div class="escalation-banner">
+        <i class="ti ti-alert-triangle"></i>
+        <div class="escalation-text">
+          <strong>Welfare follow-up needed.</strong><br>
+          Customer directed to Enbridge Gas Emergency at 1-866-763-5427. Confirmed she was outside before ending. No booking sent. Call back within the hour.
+        </div>
+      </div>
+
+      <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">Transcript</div>
+      <div class="transcript">
+        <div class="turn turn-cust">"I just got home and there's a really strong smell in the basement, I think it's gas, what do I do?"</div>
+        <div class="turn turn-agent">That can be dangerous — please leave the house right now. Don't touch any light switches, phones, or appliances on your way out. Are you able to get outside?</div>
+        <div class="turn turn-cust">"Okay, I'm heading out."</div>
+        <div class="turn turn-agent">Good. Once you're outside, call Enbridge Gas Emergency at 1-866-763-5427. If anyone is feeling dizzy or unwell, call 911 first.</div>
+        <div class="turn turn-cust">"I'm outside now. Calling Enbridge."</div>
+        <div class="turn turn-agent">You did the right thing reaching out. I'm flagging this for Jill — she'll personally call you back within the hour to make sure you're okay and help with next steps.</div>
+      </div>
+
+      <div class="drill-actions">
+        <button class="drill-btn primary" onclick="showToast('Calling Marta Hennings…')">
+          <i class="ti ti-phone"></i>Call now
+        </button>
+        <button class="drill-btn" onclick="setScreen('plumber-sms')">
+          <i class="ti ti-message"></i>Draft SMS
+        </button>
+        <button class="drill-btn" onclick="showToast('Marked complete. Welfare confirmed.')">
+          <i class="ti ti-check"></i>Mark done
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// CALENDAR
+// ============================================================
+function renderCalendarContent() {
+  return `
+    <div class="cal-toolbar">
+      <div class="tab-group">
+        <button class="cal-tab ${state.calendarMode === 'day' ? 'active' : ''}" onclick="setCalMode('day')">Day</button>
+        <button class="cal-tab ${state.calendarMode === 'week' ? 'active' : ''}" onclick="setCalMode('week')">Week</button>
+        <button class="cal-tab ${state.calendarMode === 'month' ? 'active' : ''}" onclick="setCalMode('month')">Month</button>
+      </div>
+    </div>
+    ${state.calendarMode === 'month' ? renderCalMonth() : ''}
+    ${state.calendarMode === 'week' ? renderCalWeek() : ''}
+    ${state.calendarMode === 'day' ? renderCalDay() : ''}
+  `;
+}
+
+function renderCalMonth() {
+  const bookings = {
+    20: { count: 4 }, 21: { count: 3 }, 22: { count: 5 },
+    23: { count: 0 }, 24: { count: 0 },
+    25: { count: 6 }, 26: { count: 5, today: true, hasL1: true },
+    27: { count: 7 }, 28: { count: 4 }, 29: { count: 3 },
+    30: { count: 0 }, 31: { count: 0 },
+  };
+  const daysInMonth = 31;
+  const firstDayOfWeek = 5;
+  let cells = '';
+  for (let i = 0; i < firstDayOfWeek; i++) {
+    cells += `<div class="cal-day dim"><span class="cal-day-num">${30 - firstDayOfWeek + i + 1}</span></div>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const info = bookings[d];
+    const classes = ['cal-day'];
+    if (info?.today) classes.push('today');
+    if (info?.count > 0) {
+      classes.push('has-bookings');
+      if (info.hasL1) classes.push('l1');
+    }
+    cells += `<button class="${classes.join(' ')}" onclick="selectCalDay(${d})">
+      <span class="cal-day-num">${d}</span>
+      ${info?.count > 0 ? `<span class="cal-day-badge">${info.count}</span>` : ''}
+    </button>`;
+  }
+  let bookingsDisplay = state.selectedCalDay ? renderDayBookingsExpansion(state.selectedCalDay) : '';
+  return `
+    <div class="cal-month-header">
+      <div class="cal-month-label">May 2026</div>
+      <div style="display: flex; gap: 4px;">
+        <button class="header-action" style="width:28px;height:28px;font-size:14px;"><i class="ti ti-chevron-left"></i></button>
+        <button class="header-action" style="width:28px;height:28px;font-size:14px;"><i class="ti ti-chevron-right"></i></button>
+      </div>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-day-header">Sun</div>
+      <div class="cal-day-header">Mon</div>
+      <div class="cal-day-header">Tue</div>
+      <div class="cal-day-header">Wed</div>
+      <div class="cal-day-header">Thu</div>
+      <div class="cal-day-header">Fri</div>
+      <div class="cal-day-header">Sat</div>
+      ${cells}
+    </div>
+    ${bookingsDisplay}
+  `;
+}
+
+function renderDayBookingsExpansion(day) {
+  if (day === 26) {
+    return `
+      <div class="day-bookings" style="margin-top: 16px;">
+        <div style="font-size: 11px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em;">May 26 · 5 bookings</div>
+        <div class="day-booking-row"><div class="day-booking-time">9:00 AM</div><div class="day-booking-name" style="opacity: 0.5; text-decoration: line-through;">Andre Khan</div><span class="day-booking-urg urg-pill-l3">Done</span></div>
+        <div class="day-booking-row"><div class="day-booking-time">11:00 AM</div><div class="day-booking-name" style="opacity: 0.5; text-decoration: line-through;">Eli Nakamura</div><span class="day-booking-urg urg-pill-l3">Done</span></div>
+        <div class="day-booking-row"><div class="day-booking-time">1:00 PM</div><div class="day-booking-name" style="opacity: 0.5; text-decoration: line-through;">Sofia Bertelli</div><span class="day-booking-urg urg-pill-l3">Done</span></div>
+        <div class="day-booking-row" style="background: var(--l2-fill); border: 1px solid var(--l2-stroke);"><div class="day-booking-time">2:30 PM</div><div class="day-booking-name">Mira Patel</div><span class="day-booking-urg urg-pill-l2">L2</span></div>
+        <div class="day-booking-row"><div class="day-booking-time">4:00 PM</div><div class="day-booking-name">Daniel Cho</div><span class="day-booking-urg urg-pill-l3">L3</span></div>
+      </div>
+    `;
+  } else {
+    return `
+      <div class="day-bookings" style="margin-top: 16px;">
+        <div style="font-size: 11px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em;">May ${day} · sample bookings</div>
+        <div class="day-booking-row"><div class="day-booking-time">10:00 AM</div><div class="day-booking-name">Sample booking — drain unclog</div><span class="day-booking-urg urg-pill-l3">L3</span></div>
+        <div class="day-booking-row"><div class="day-booking-time">2:00 PM</div><div class="day-booking-name">Sample booking — faucet repair</div><span class="day-booking-urg urg-pill-l3">L3</span></div>
+      </div>
+    `;
+  }
+}
+
+function renderCalWeek() {
+  const weekdays = [
+    { name: 'Sun · May 24', count: 0 },
+    { name: 'Mon · May 25', count: 6 },
+    { name: 'Tue · May 26 (today)', count: 5, today: true },
+    { name: 'Wed · May 27', count: 7, l1: true },
+    { name: 'Thu · May 28', count: 4 },
+    { name: 'Fri · May 29', count: 3 },
+    { name: 'Sat · May 30', count: 0 },
+  ];
+  return `
+    <div class="cal-month-header">
+      <div class="cal-month-label">Week of May 24</div>
+      <div style="display: flex; gap: 4px;">
+        <button class="header-action" style="width:28px;height:28px;font-size:14px;"><i class="ti ti-chevron-left"></i></button>
+        <button class="header-action" style="width:28px;height:28px;font-size:14px;"><i class="ti ti-chevron-right"></i></button>
+      </div>
+    </div>
+    ${weekdays.map((d) => `
+      <div class="week-day-card">
+        <div class="week-day-header" style="${d.today ? 'border-left: 3px solid var(--navy);' : ''}">
+          <span>${d.name}</span>
+          <span class="week-day-count">${d.count} ${d.count === 1 ? 'booking' : 'bookings'}${d.l1 ? ' · L1 alert' : ''}</span>
+        </div>
+        ${d.count === 0 ? '<div class="week-day-empty">No bookings</div>' : `<div style="padding: 8px;"><div style="font-size: 11px; color: var(--text-secondary); padding: 4px;">Tap to see all ${d.count} bookings</div></div>`}
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderCalDay() {
+  return `
+    <div class="cal-month-header">
+      <div class="cal-month-label">Tuesday · May 26 (today)</div>
+      <div style="display: flex; gap: 4px;">
+        <button class="header-action" style="width:28px;height:28px;font-size:14px;"><i class="ti ti-chevron-left"></i></button>
+        <button class="header-action" style="width:28px;height:28px;font-size:14px;"><i class="ti ti-chevron-right"></i></button>
+      </div>
+    </div>
+    <div class="day-bookings">
+      <div class="day-booking-row"><div class="day-booking-time">9:00 AM</div><div class="day-booking-name" style="opacity: 0.5; text-decoration: line-through;">Andre Khan — kitchen sink leak</div><span class="day-booking-urg urg-pill-l3">Done</span></div>
+      <div class="day-booking-row"><div class="day-booking-time">11:00 AM</div><div class="day-booking-name" style="opacity: 0.5; text-decoration: line-through;">Eli Nakamura — toilet running</div><span class="day-booking-urg urg-pill-l3">Done</span></div>
+      <div class="day-booking-row"><div class="day-booking-time">1:00 PM</div><div class="day-booking-name" style="opacity: 0.5; text-decoration: line-through;">Sofia Bertelli — faucet replacement</div><span class="day-booking-urg urg-pill-l3">Done</span></div>
+      <div class="day-booking-row" style="background: var(--l2-fill); border: 1px solid var(--l2-stroke);"><div class="day-booking-time">2:30 PM</div><div class="day-booking-name">Mira Patel — water heater leaking</div><span class="day-booking-urg urg-pill-l2">L2</span></div>
+      <div class="day-booking-row"><div class="day-booking-time">4:00 PM</div><div class="day-booking-name">Daniel Cho — dishwasher install</div><span class="day-booking-urg urg-pill-l3">L3</span></div>
+    </div>
+  `;
+}
+
+// ============================================================
+// PLUMBER SMS
+// ============================================================
+function renderPlumberSmsContent() {
+  return `
+    <div class="sms-wrapper">
+      <div class="sms-thread-header">
+        <div class="sms-thread-avatar">P</div>
+        <div class="sms-thread-name">Pipeline</div>
+        <div class="sms-thread-meta">SMS · today</div>
+      </div>
+      <div class="sms-thread">
+        <div class="sms-timestamp">11:42 AM</div>
+        <div class="sms-bubble incoming">
+          🆕 New L3 conversation — Priya Ramaswamy. Toilet replacement, master bath. Agent has drafted a quote for your review.
+          <div class="sms-link" onclick="setScreen('quote-review')">
+            <i class="ti ti-file-dollar"></i>Review quote · $565.55
+          </div>
+        </div>
+        <div class="sms-timestamp">12:08 PM</div>
+        <div class="sms-bubble incoming">
+          🔴 L1 emergency — James Okafor. Burst pipe in basement, water shutoff successful. Awaiting your dispatch decision.
+          <div class="sms-link" onclick="setScreen('emergencies')">
+            <i class="ti ti-flame"></i>Open emergency
+          </div>
+        </div>
+        <div class="sms-timestamp">2:14 PM</div>
+        <div class="sms-bubble incoming" style="background: var(--l0-fill); border-color: var(--l0-stroke);">
+          ⚠️ L0 SAFETY — Marta Hennings. Gas smell. Customer directed to Enbridge. Personal welfare follow-up needed within 1 hour.
+          <div class="sms-link" onclick="setScreen('callbacks')" style="background: var(--bg-surface); color: var(--l0-text);">
+            <i class="ti ti-shield-exclamation"></i>Open safety escalation
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// QUOTE REVIEW
+// ============================================================
+function renderQuoteReviewContent() {
+  const data = state.quoteEdits || quoteData;
+  const totals = calcTotals(data);
+  return `
+    ${state.quoteMode === 'review' ? renderQuoteDoc(data, totals) : renderQuoteEdit(data, totals)}
+    ${state.quoteMode === 'review' ? renderQuoteActions() : renderEditActions()}
+    ${state.showRejectModal ? renderRejectModal() : ''}
+  `;
+}
+
+function renderQuoteDoc(data, totals) {
+  return `
+    <div style="font-size: 11px; color: var(--text-secondary); margin: 4px 4px 10px; line-height: 1.5;">
+      <i class="ti ti-info-circle" style="vertical-align:-2px;"></i> This is exactly what the customer will see. Tap any line item to revise.
+    </div>
+
+    <div class="quote-doc">
+      <div class="quote-letterhead">
+        <div class="quote-company">Jill's Plumbing</div>
+        <div class="quote-tagline">Licensed P3 · Serving the GTA · jillsplumbing.ca</div>
+      </div>
+
+      <div class="quote-doc-title">Quote</div>
+
+      <div class="quote-meta">
+        <div class="quote-meta-block">
+          <div class="quote-meta-label">Quote no.</div>
+          <div class="quote-meta-value">${data.quoteNumber}</div>
+        </div>
+        <div class="quote-meta-block">
+          <div class="quote-meta-label">Date issued</div>
+          <div class="quote-meta-value">${data.date}</div>
+        </div>
+        <div class="quote-meta-block">
+          <div class="quote-meta-label">Customer</div>
+          <div class="quote-meta-value">${data.customer.name}<br>${data.customer.phone}<br>${data.customer.email}</div>
+        </div>
+        <div class="quote-meta-block">
+          <div class="quote-meta-label">Service address</div>
+          <div class="quote-meta-value">${data.customer.address}</div>
+        </div>
+      </div>
+
+      <div class="quote-section">
+        <div class="quote-section-h">Problem &amp; scope</div>
+        <div style="font-size: 11px; line-height: 1.5; cursor: pointer; padding: 4px; border-radius: var(--radius-sm); transition: background 0.15s;" onclick="enterReviseFocus('problem', null, null)" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'">${data.problem}</div>
+      </div>
+
+      <div class="quote-section">
+        <div class="quote-section-h">Materials</div>
+        <table class="quote-table">
+          <thead>
+            <tr><th class="desc">Description</th><th class="center">Qty</th><th class="right">Amount</th></tr>
+          </thead>
+          <tbody>
+            ${data.materials.map((m, i) => `
+              <tr class="tappable-field" onclick="enterReviseFocus('materials', ${i}, 'desc')">
+                <td class="desc">${m.desc}</td>
+                <td class="qty">${m.qty}</td>
+                <td class="amt">${fmt$(m.amount)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="quote-section">
+        <div class="quote-section-h">Labour</div>
+        <table class="quote-table">
+          <thead>
+            <tr><th class="desc">Description</th><th class="center">Qty</th><th class="right">Amount</th></tr>
+          </thead>
+          <tbody>
+            ${data.labour.map((l, i) => `
+              <tr class="tappable-field" onclick="enterReviseFocus('labour', ${i}, 'desc')">
+                <td class="desc">${l.desc}</td>
+                <td class="qty">${l.qty}</td>
+                <td class="amt">${fmt$(l.amount)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="quote-totals">
+        <div class="quote-total-row"><span>Materials subtotal</span><span>${fmt$(totals.materialsSubtotal)}</span></div>
+        <div class="quote-total-row"><span>Labour subtotal</span><span>${fmt$(totals.labourSubtotal)}</span></div>
+        <div class="quote-total-row"><span style="font-weight: 500;">Subtotal before tax</span><span style="font-weight: 500;">${fmt$(totals.subtotal)}</span></div>
+        <div class="quote-total-row"><span>HST (13%)</span><span>${fmt$(totals.tax)}</span></div>
+        <div class="quote-total-row grand"><span>Total</span><span>${fmt$(totals.total)}</span></div>
+      </div>
+
+      <div class="quote-notes">
+        <strong style="color: var(--text-primary); font-weight: 500;">Notes &amp; terms.</strong> Quote valid until ${data.validUntil}. Pricing assumes flange in serviceable condition; if flange replacement is required, additional materials and labour will be quoted on site. Work to be completed in a single visit, approximately 2.5 hours. 90-day workmanship warranty on labour; manufacturer warranties apply to materials. Customer-supplied fixture excluded from warranty.
+      </div>
+    </div>
+  `;
+}
+
+function renderQuoteEdit(data, totals) {
+  return `
+    <div style="font-size: 11px; color: var(--text-secondary); margin: 4px 4px 10px; line-height: 1.5;">
+      <i class="ti ti-edit" style="vertical-align:-2px;"></i> Edit line items below. Totals recalculate automatically. The highlighted field was the one you tapped.
+    </div>
+
+    <div class="quote-doc">
+      <div class="quote-letterhead">
+        <div class="quote-company">Jill's Plumbing</div>
+        <div class="quote-tagline">${data.customer.name} · ${data.quoteNumber} · ${data.date}</div>
+      </div>
+
+      <div class="quote-section">
+        <div class="quote-section-h">Problem &amp; scope</div>
+        <textarea class="edit-input ${state.focusedField?.section === 'problem' ? 'focused-highlight' : ''}" style="min-height: 70px; font-size: 11px; line-height: 1.5;" id="edit-problem" oninput="updateQuoteEdit('problem', this.value)">${data.problem}</textarea>
+      </div>
+
+      <div class="quote-section">
+        <div class="quote-section-h">Materials</div>
+        ${data.materials.map((m, i) => `
+          <div class="edit-line-item">
+            <input class="edit-input ${state.focusedField?.section === 'materials' && state.focusedField?.idx === i && state.focusedField?.field === 'desc' ? 'focused-highlight' : ''}" id="edit-materials-${i}-desc" value="${m.desc.replace(/"/g, '&quot;')}" oninput="updateQuoteLine('materials', ${i}, 'desc', this.value)">
+            <input class="edit-input" type="number" min="0" step="1" value="${m.qty}" oninput="updateQuoteLine('materials', ${i}, 'qty', parseFloat(this.value) || 0)">
+            <input class="edit-input amt" type="number" min="0" step="0.01" value="${m.amount.toFixed(2)}" oninput="updateQuoteLine('materials', ${i}, 'amount', parseFloat(this.value) || 0)">
+            <button class="edit-line-delete" onclick="removeLineItem('materials', ${i})" aria-label="Remove"><i class="ti ti-trash"></i></button>
+          </div>
+        `).join('')}
+        <button class="edit-add-row" onclick="addLineItem('materials')">+ Add material</button>
+      </div>
+
+      <div class="quote-section">
+        <div class="quote-section-h">Labour</div>
+        ${data.labour.map((l, i) => `
+          <div class="edit-line-item">
+            <input class="edit-input ${state.focusedField?.section === 'labour' && state.focusedField?.idx === i && state.focusedField?.field === 'desc' ? 'focused-highlight' : ''}" id="edit-labour-${i}-desc" value="${l.desc.replace(/"/g, '&quot;')}" oninput="updateQuoteLine('labour', ${i}, 'desc', this.value)">
+            <input class="edit-input" type="number" min="0" step="1" value="${l.qty}" oninput="updateQuoteLine('labour', ${i}, 'qty', parseFloat(this.value) || 0)">
+            <input class="edit-input amt" type="number" min="0" step="0.01" value="${l.amount.toFixed(2)}" oninput="updateQuoteLine('labour', ${i}, 'amount', parseFloat(this.value) || 0)">
+            <button class="edit-line-delete" onclick="removeLineItem('labour', ${i})" aria-label="Remove"><i class="ti ti-trash"></i></button>
+          </div>
+        `).join('')}
+        <button class="edit-add-row" onclick="addLineItem('labour')">+ Add labour line</button>
+      </div>
+
+      <div class="quote-totals">
+        <div class="quote-total-row"><span>Materials subtotal</span><span>${fmt$(totals.materialsSubtotal)}</span></div>
+        <div class="quote-total-row"><span>Labour subtotal</span><span>${fmt$(totals.labourSubtotal)}</span></div>
+        <div class="quote-total-row"><span style="font-weight: 500;">Subtotal before tax</span><span style="font-weight: 500;">${fmt$(totals.subtotal)}</span></div>
+        <div class="quote-total-row"><span>HST (13%)</span><span>${fmt$(totals.tax)}</span></div>
+        <div class="quote-total-row grand"><span>Total</span><span>${fmt$(totals.total)}</span></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderQuoteActions() {
+  return `
+    <div class="quote-action-bar">
+      <button class="quote-btn approve" onclick="approveQuote()">
+        <i class="ti ti-check"></i>Approve &amp; send
+      </button>
+      <button class="quote-btn revise" onclick="enterRevise()">
+        <i class="ti ti-edit"></i>Revise
+      </button>
+      <button class="quote-btn reject" onclick="openRejectModal()">
+        <i class="ti ti-x"></i>Reject
+      </button>
+    </div>
+  `;
+}
+
+function renderEditActions() {
+  return `
+    <div class="quote-action-bar" style="grid-template-columns: 1fr 1fr;">
+      <button class="quote-btn approve" onclick="saveAndApprove()">
+        <i class="ti ti-check"></i>Save &amp; send
+      </button>
+      <button class="quote-btn revise" onclick="exitRevise()">
+        <i class="ti ti-eye"></i>Back to review
+      </button>
+    </div>
+  `;
+}
+
+function renderRejectModal() {
+  return `
+    <div class="modal-overlay" onclick="closeRejectModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title">Reject this quote?</div>
+        <div class="modal-desc">The customer won't receive this quote. Pipeline will flag the conversation for manual follow-up by you. Why are you rejecting?</div>
+        <textarea class="modal-textarea" placeholder="e.g., need site visit before quoting, customer needs to be called directly, scope unclear…" id="rejectReason"></textarea>
+        <div class="modal-actions">
+          <button class="modal-btn secondary" onclick="closeRejectModal()">Cancel</button>
+          <button class="modal-btn primary" onclick="confirmReject()">Reject &amp; flag</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// CUSTOMER SMS
+// ============================================================
+function renderCustomerSmsContent() {
+  return `
+    <div style="background: var(--bg-secondary); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 12px; font-size: 11px; color: var(--text-secondary); line-height: 1.5;">
+      <i class="ti ti-info-circle" style="vertical-align:-2px;"></i> This is what Priya sees on her phone after Jill approves the quote.
+    </div>
+    <div class="sms-wrapper">
+      <div class="sms-thread-header">
+        <div class="sms-thread-avatar" style="background: var(--l2-stroke);">JP</div>
+        <div class="sms-thread-name">Jill's Plumbing</div>
+        <div class="sms-thread-meta">+1 (416) 555-PIPE</div>
+      </div>
+      <div class="sms-thread">
+        <div class="sms-timestamp">11:30 AM</div>
+        <div class="sms-bubble incoming">Hi Priya — this is Pipeline, the assistant for Jill's Plumbing. Just to confirm, you're looking to replace the leaking toilet in your master bathroom. Is that right?</div>
+        <div class="sms-bubble outgoing">Yes, that's right. I've got the new toilet ready to install.</div>
+        <div class="sms-bubble incoming">
+          Great — thanks for confirming. Jill has reviewed the details and put together a quote for the work. Take a look whenever you're ready.
+          <div class="sms-link">
+            <i class="ti ti-file-dollar"></i>View your quote — $565.55
+            <div style="font-size: 9px; color: var(--text-tertiary); font-family: ui-monospace, monospace; margin-top: 4px;">jillsplumbing.ca/q/JP-2026-0341</div>
+          </div>
+        </div>
+        <div class="sms-timestamp">2:30 PM</div>
+        <div class="sms-bubble incoming">
+          When you're ready to book, you can grab a time directly here:
+          <div class="sms-link">
+            <i class="ti ti-calendar"></i>Book your appointment
+            <div style="font-size: 9px; color: var(--text-tertiary); font-family: ui-monospace, monospace; margin-top: 4px;">calendly.com/jillsplumbing/visit</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// INTERACTIONS
+// ============================================================
+function setScreen(screen) {
+  state.currentScreen = screen;
+  state.timeWindowMenuOpen = false;
+  if (screen !== 'today') {
+    state.conversionAccordion = false;
+    state.revenueAccordion = false;
+    state.todayJobsExpanded = false;
+  }
+  if (screen !== 'quote-review') {
+    state.quoteMode = 'review';
+    state.quoteEdits = null;
+    state.showRejectModal = false;
+    state.focusedField = null;
+  }
+  render();
+  document.querySelectorAll('.ws-tab').forEach((b) => {
+    b.classList.toggle('active', b.dataset.screen === screen);
+  });
+}
+
+function toggleTimeWindow() {
+  state.timeWindowMenuOpen = !state.timeWindowMenuOpen;
+  render();
+}
+
+function setTimeWindow(tw) {
+  state.timeWindow = tw;
+  state.timeWindowMenuOpen = false;
+  state.dayOffset = 0;
+  render();
+}
+
+function adjustDay(delta) {
+  state.dayOffset += delta;
+  render();
+}
+
+function toggleAccordion(which) {
+  if (which === 'conversion') state.conversionAccordion = !state.conversionAccordion;
+  if (which === 'revenue') state.revenueAccordion = !state.revenueAccordion;
+  if (which === 'todayJobs') state.todayJobsExpanded = !state.todayJobsExpanded;
+  if (which === 'closed') state.closedExpanded = !state.closedExpanded;
+  render();
+}
+
+function setAccordionPeriod(which, period) {
+  if (which === 'conversion') state.conversionPeriod = period;
+  if (which === 'revenue') state.revenuePeriod = period;
+  render();
+}
+
+function setMetricVariant(metric, variant) {
+  if (metric === 'conversion') state.conversionVariant = variant;
+  if (metric === 'revenue') state.revenueVariant = variant;
+  render();
+}
+
+function setCalMode(mode) {
+  state.calendarMode = mode;
+  state.selectedCalDay = null;
+  render();
+}
+
+function selectCalDay(day) {
+  state.selectedCalDay = state.selectedCalDay === day ? null : day;
+  render();
+}
+
+function enterRevise() {
+  state.quoteMode = 'edit';
+  state.quoteEdits = JSON.parse(JSON.stringify(quoteData));
+  state.focusedField = null;
+  render();
+}
+
+function enterReviseFocus(section, idx, field) {
+  state.quoteMode = 'edit';
+  state.quoteEdits = JSON.parse(JSON.stringify(quoteData));
+  state.focusedField = { section, idx, field };
+  render();
+  // focus the right field after render
+  setTimeout(() => {
+    let id;
+    if (section === 'problem') id = 'edit-problem';
+    else id = `edit-${section}-${idx}-${field}`;
+    const el = document.getElementById(id);
+    if (el) { el.focus(); el.select?.(); }
+  }, 30);
+}
+
+function exitRevise() {
+  state.quoteMode = 'review';
+  state.focusedField = null;
+  render();
+}
+
+function updateQuoteEdit(field, value) {
+  if (!state.quoteEdits) return;
+  state.quoteEdits[field] = value;
+}
+
+function updateQuoteLine(section, idx, field, value) {
+  if (!state.quoteEdits) return;
+  state.quoteEdits[section][idx][field] = value;
+  if (field === 'amount' || field === 'qty') {
+    // re-render only the totals to avoid blur
+    const totals = calcTotals(state.quoteEdits);
+    document.querySelectorAll('.quote-total-row').forEach((row, i) => {
+      const lines = [
+        fmt$(totals.materialsSubtotal),
+        fmt$(totals.labourSubtotal),
+        fmt$(totals.subtotal),
+        fmt$(totals.tax),
+        fmt$(totals.total),
+      ];
+      const span = row.children[1];
+      if (span) span.textContent = lines[i];
+    });
+  }
+}
+
+function addLineItem(section) {
+  if (!state.quoteEdits) return;
+  state.quoteEdits[section].push({ desc: 'New ' + (section === 'materials' ? 'material' : 'labour line'), qty: 1, amount: 0 });
+  render();
+}
+
+function removeLineItem(section, idx) {
+  if (!state.quoteEdits) return;
+  state.quoteEdits[section].splice(idx, 1);
+  render();
+}
+
+function approveQuote() {
+  showToast('Quote approved. Sending to Priya by email + SMS.');
+  setTimeout(() => setScreen('customer-sms'), 800);
+}
+
+function saveAndApprove() {
+  showToast('Revised quote saved and sent to Priya.');
+  setTimeout(() => setScreen('customer-sms'), 800);
+}
+
+function openRejectModal() {
+  state.showRejectModal = true;
+  render();
+}
+
+function closeRejectModal(e) {
+  if (e && e.target.closest('.modal')) return;
+  state.showRejectModal = false;
+  render();
+}
+
+function confirmReject() {
+  state.showRejectModal = false;
+  showToast('Quote rejected. Flagged for manual follow-up.');
+  setTimeout(() => setScreen('quotes-queue'), 800);
+}
+
+function toggleChecklistItem(personId, itemKey) {
+  if (!state.notesData[personId]) state.notesData[personId] = { text: '', checklist: {} };
+  state.notesData[personId].checklist[itemKey] = !state.notesData[personId].checklist[itemKey];
+  render();
+}
+
+function updateNote(personId, value) {
+  if (!state.notesData[personId]) state.notesData[personId] = { text: '', checklist: {} };
+  state.notesData[personId].text = value;
+}
+
+// Close dropdowns when tapping outside
+document.addEventListener('click', (e) => {
+  if (state.timeWindowMenuOpen && !e.target.closest('.tw-current') && !e.target.closest('.tw-menu')) {
+    state.timeWindowMenuOpen = false;
+    render();
+  }
+});
+
+// ============================================================
+// MAIN RENDER
+// ============================================================
+function render() {
+  const header = document.getElementById('screenHeader');
+  const content = document.getElementById('screenContent');
+  const nav = document.getElementById('bottomNav');
+
+  let headerHtml = '';
+  let contentHtml = '';
+
+  switch (state.currentScreen) {
+    case 'today':
+      headerHtml = renderScreenHeader('Today', "Jill's Plumbing · Etobicoke, ON");
+      contentHtml = renderTodayContent();
+      break;
+    case 'callbacks':
+      headerHtml = renderScreenHeader('Safety escalations', 'L0 · welfare follow-up needed', true, 'today');
+      contentHtml = renderCallbacksContent();
+      break;
+    case 'emergencies':
+      headerHtml = renderScreenHeader('Emergencies', 'L1 · dispatch decision', true, 'today');
+      contentHtml = renderEmergenciesContent();
+      break;
+    case 'quotes-queue':
+      headerHtml = renderScreenHeader('Quote approvals', 'Drafted by agent · awaiting your sign-off', true, 'today');
+      contentHtml = renderQuotesQueueContent();
+      break;
+    case 'pipeline':
+      headerHtml = renderScreenHeader('Pipeline', 'All active conversations');
+      contentHtml = renderPipelineContent();
+      break;
+    case 'conv-detail':
+      headerHtml = renderScreenHeader('Conversation', 'Safety escalation', true, 'callbacks');
+      contentHtml = renderConvDetailContent();
+      break;
+    case 'calendar':
+      headerHtml = renderScreenHeader('Schedule', 'May 2026');
+      contentHtml = renderCalendarContent();
+      break;
+    case 'plumber-sms':
+      headerHtml = renderScreenHeader('Messages', 'Pipeline · automated alerts');
+      contentHtml = renderPlumberSmsContent();
+      break;
+    case 'quote-review':
+      headerHtml = renderScreenHeader(state.quoteMode === 'edit' ? 'Revise quote' : 'Review quote', `${quoteData.customer.name} · ${quoteData.quoteNumber}`, true, 'quotes-queue');
+      contentHtml = renderQuoteReviewContent();
+      break;
+    case 'customer-sms':
+      headerHtml = renderScreenHeader('Customer view', 'Priya Ramaswamy · iPhone Messages', true, 'today');
+      contentHtml = renderCustomerSmsContent();
+      break;
+  }
+
+  header.innerHTML = headerHtml;
+  content.innerHTML = contentHtml;
+  nav.innerHTML = renderBottomNav();
+}
+
+document.getElementById('screenTabs').addEventListener('click', (e) => {
+  if (e.target.matches('.ws-tab')) setScreen(e.target.dataset.screen);
+});
+
+render();
+</script>
+
+</body>
+</html>
