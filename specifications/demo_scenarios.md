@@ -22,7 +22,7 @@ All JSON shapes are produced by:
   via `API_URL=http://localhost:8000`.
 - [ ] Backend `.env` (or environment) has `CALENDLY_SCHEDULING_URL=` set,
   or relies on the demo fallback
-  (`https://calendly.com/jills-plumbing/consultation`).
+  (`https://calendly.com/pipe-dreams-by-jill/consultation`).
 - [ ] Dashboard is open in a second tab so Jill's view updates live.
 - [ ] No real customer PII used; demo names only.
 
@@ -215,7 +215,7 @@ approves → customer accepts → Calendly link sent.
 {
   "booking_status": "link_sent",
   "booking_method": "calendly",
-  "scheduling_url": "https://calendly.com/jills-plumbing/consultation",
+  "scheduling_url": "https://calendly.com/pipe-dreams-by-jill/consultation",
   "instructions_to_customer": "Please choose the earliest available time that works for you.",
   "requires_jill_time_approval": false,
   "urgency_context": "priority",
@@ -289,7 +289,7 @@ link → customer books.
 {
   "booking_status": "link_sent",
   "booking_method": "calendly",
-  "scheduling_url": "https://calendly.com/jills-plumbing/consultation",
+  "scheduling_url": "https://calendly.com/pipe-dreams-by-jill/consultation",
   "instructions_to_customer": "Pick any time that works for you.",
   "requires_jill_time_approval": false,
   "urgency_context": "scheduled",
@@ -316,6 +316,99 @@ Not called by default for scheduled appointments. If the customer asks
 - No quote shown (unless customer asks).
 - No Jill approval step at any point.
 - Customer can self-serve through to a booking with one Calendly click.
+
+---
+
+## Scenario 4 — Safety Escalation / Out of Scope (gas smell)
+
+### Goal
+
+Show that Pipeline recognises a hard safety hazard (gas smell), bypasses
+normal quote and booking flow, delivers the correct safety script,
+alerts Jill for a welfare follow-up, and never offers a Calendly link
+or a quote.
+
+### Customer input
+
+> "I smell gas near the water heater in my basement. Can you come fix it?"
+
+### Expected behaviour
+
+1. Triage returns `safety_escalation` with `internal_level = L0_safety`.
+2. Agent replies with the safety script: leave the home, do not touch
+   switches or appliances, call the gas emergency line, call 911 if
+   anyone feels unwell.
+3. Agent confirms "Jill has been alerted" and that Jill will follow up.
+4. Dashboard immediately shows the conversation with `🟠 Safety
+   Escalation: safety` + `Awaiting Welfare Call` badges, sorted above
+   any L1 emergency.
+5. Scheduling module is not called. If called defensively, it returns
+   the safety bypass (no Calendly link).
+6. No quote is drafted.
+
+### E9 output (rules path)
+
+```json
+{
+  "urgency_level": "safety_escalation",
+  "urgency_label": "Safety Escalation",
+  "internal_level": "L0_safety",
+  "confidence": 0.96,
+  "reason": "Customer reports gas smell in the home.",
+  "recommended_action": "Deliver safety script, alert Jill for welfare follow-up, do not quote, do not send Calendly.",
+  "customer_facing_guidance": "Leave the home now. Don't touch any switches or appliances. Once you're outside, call Enbridge Gas Emergency at 1-866-763-5427. If anyone feels unwell, call 911.",
+  "requires_human_followup": true,
+  "continue_normal_flow": false,
+  "needs_clarification": false,
+  "customer_claimed_emergency": false,
+  "active_damage_confirmed": false,
+  "classification_source": "rules",
+  "matched_signals": ["smell gas", "water heater", "basement"]
+}
+```
+
+### E10 output (safety bypass)
+
+Not called by default. If called defensively, expect:
+
+```json
+{
+  "booking_status": "not_started",
+  "booking_method": "manual_emergency",
+  "scheduling_url": null,
+  "instructions_to_customer": null,
+  "requires_jill_time_approval": false,
+  "urgency_context": "emergency",
+  "notify_jill": true
+}
+```
+
+### E11 output
+
+Not called. Safety escalations never generate a quote.
+
+### Dashboard state at end of scenario
+
+- List card: `🟠 Safety Escalation: safety` + `Awaiting Welfare Call`,
+  pinned above L1 emergencies.
+- Detail panel:
+  - Triage section shows the JSON above (rendered), with the safety
+    guidance script visible.
+  - Booking section shows the safety bypass message (no Calendly link).
+  - Quote section shows "No quote — safety escalation does not generate
+    a quote."
+- Actions row: `Confirm welfare call done`, `Resend safety guidance`,
+  `Close — Safety Resolved`.
+
+### Acceptance
+
+- Agent first message includes the safety guidance verbatim or a close
+  paraphrase (leave the home, don't touch switches, call gas emergency
+  line, call 911 if unwell).
+- No Calendly link appears in chat.
+- No quote is drafted or shown.
+- Dashboard L0 card visible within one poll cycle and sorted above any
+  L1 emergency.
 
 ---
 

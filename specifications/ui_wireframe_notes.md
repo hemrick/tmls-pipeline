@@ -23,7 +23,7 @@ width.
 
 ```
 ┌──────────────────────────────────────────────────┐
-│  Jill's Plumbing                              ☰  │  ← header
+│  Pipe Dreams by Jill                              ☰  │  ← header
 ├──────────────────────────────────────────────────┤
 │                                                  │
 │  [Agent]  Hi! I'm Jill's AI assistant. What's    │
@@ -82,7 +82,7 @@ Two-pane layout on desktop (list left, detail right). On mobile, list-only
 with tap-through to detail.
 
 ```
-┌─ Pipeline — Jill's Dashboard ──────────────────────────────────────────┐
+┌─ Pipeline — Pipe Dreams by Jill Dashboard ─────────────────────────────┐
 │  [Filter ▼ All]  [Search…]   🔴 1 emergency  🟠 1 safety escalation     │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ 🟠 SAFETY     Marie L.   1 min ago                                      │
@@ -385,7 +385,7 @@ BOOKING
 ```
 BOOKING
   link_sent  •  Calendly link sent 5 min ago
-  https://calendly.com/jills-plumbing/consultation
+  https://calendly.com/pipe-dreams-by-jill/consultation
   Instructions to customer: "Please choose the earliest available time
                              that works for you."
   [ Resend link ]   [ Mark manual follow-up ]

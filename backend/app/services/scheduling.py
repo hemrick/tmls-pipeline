@@ -41,7 +41,7 @@ UrgencyContext = Literal["emergency", "priority", "scheduled"]
 # Demo fallback used when CALENDLY_SCHEDULING_URL is not set. Safe to
 # commit -- it points at the hackathon demo account, not a real customer
 # calendar.
-DEMO_CALENDLY_URL = "https://calendly.com/jills-plumbing/consultation"
+DEMO_CALENDLY_URL = "https://calendly.com/pipe-dreams-by-jill/consultation"
 
 
 class SchedulingResponse(TypedDict):

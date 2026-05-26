@@ -219,7 +219,7 @@
 | **E6-2** | ~~RAG retrieval~~ -- replaced by system prompt. Knowledge lives directly in Conversation Agent instructions. |
 | **E6-3** | Format full system prompt: identity + behavior rules, urgency classification definitions, plumbing knowledge, conversation flow rules (collect name/phone/email, flag unknowns for Jill, 3-sentence max). |
 | **E6-4** | Test grounding once E2 is wired: ask edge-case questions, verify agent flags unknowns rather than guessing. |
-| **E6-5** | Contractor persona (Jill's Plumbing) -- Owner: Joe. Commit to `specifications/contractor_persona.md`. Feeds into system prompt + dashboard branding. |
+| **E6-5** | Contractor persona (Pipe Dreams by Jill) -- Owner: Joe. Commit to `specifications/contractor_persona.md`. Feeds into system prompt + dashboard branding. |
 | **E6-6** | **[Jen]** Merge Joe's `plumbingtriageknowledgebase.md` from his branch into main before using for E6-1. Joe to resolve any git conflicts on his end first. |
 | **E6-7** | **[Jen]** Reconcile service catalogs -- merge `specifications/services_catalog.md` (created Day 2) with any overlapping content in Joe's knowledge base file. One canonical reference, no duplicates. |
 
@@ -276,7 +276,7 @@ No customer-facing chat UI in scope. Session management note for the record: bac
 | **E10-2** | Scheduling Agent: sends link to customer with urgency-appropriate framing. Emergency bypasses Calendly entirely. |
 | **E10-3** | Calendly webhook handler (`POST /webhooks/calendly`): validate signature, handle `invitee.created` (create Booking, set `booked_slot_text`, update status to Booked) and `invitee.canceled` (status to Cancelled). |
 | **E10-4** | End-to-end test in demo scenarios 2 and 3. |
-| **E10-5** | **[Joe]** Jill's Plumbing logo -- create/source logo asset. Add to Calendly account profile and dashboard branding. |
+| **E10-5** | **[Joe]** Pipe Dreams by Jill logo -- create/source logo asset. Add to Calendly account profile and dashboard branding. |
 
 ---
 
@@ -333,7 +333,7 @@ Scenarios are fully scripted in `specifications/demo_scenarios.md` (Joe). Four s
 | **E13-4** | Jen -- digitize pitch/overview PPT slides to mermaid or markdown for submission materials. |
 | **E13-5** | **[Joe]** Add out-of-scope (4th) scenario to `specifications/demo_scenarios.md`. Same format as existing 3 -- customer input, expected behaviour, E9 JSON output, dashboard state, acceptance criteria. |
 | **E13-6** ✅ | Team emails collected -- already in Slack. |
-| **E13-7** | **[Joe]** Pipeline product branding -- logo or wordmark for the product itself (distinct from Jill's Plumbing logo in E10-5). Used in dashboard header and submission materials. |
+| **E13-7** | **[Joe]** Pipeline product branding -- logo or wordmark for the product itself (distinct from Pipe Dreams by Jill logo in E10-5). Used in dashboard header and submission materials. |
 | **E13-8** | Final review + submit before deadline. |
 
 ---
@@ -661,7 +661,7 @@ tmls-pipeline/
 ├── data/
 │   ├── .env.local.example           # CALENDLY_SCHEDULING_URL, CALENDLY_EVENT_TYPE_URI, CALENDLY_WEBHOOK_SECRET
 │   ├── knowledge_base.yaml          # Plumbing Q&As
-│   └── contractor_profile.yaml      # "Jill's Plumbing" info
+│   └── contractor_profile.yaml      # "Pipe Dreams by Jill" info
 │
 ├── .env.local.example               # Template for secrets
 ├── .gitignore
@@ -718,7 +718,7 @@ These decisions are **blocking** — resolve them before Day 1 Hour 1.
 | **Knowledge Base Source** | Hand-craft 30–50 Q&As vs scrape public plumbing site | Time investment, control over content, accuracy | E6 Owner + D1 | D1 Hr 0.5 |
 | **Email MVP** | Flat file output vs wire real SMTP/SendGrid | Demo polish, MVP scope, time budget | E11 Owner + D2 | D1 Hr 1 |
 | **Emergency Alert Strategy** | Dashboard red badge only vs add simulated Slack/SMS | Demo impact, scope creep, judging criteria | E9 Owner + D3 | D1 Hr 1 |
-| **Contractor Persona** | Use Jill's Plumbing as the contractor persona (resolved) | Credibility on stage, detail level | E12 Owner + D3 | D1 Hr 1 |
+| **Contractor Persona** | Use Pipe Dreams by Jill as the contractor persona (resolved) | Credibility on stage, detail level | E12 Owner + D3 | D1 Hr 1 |
 
 ---
 
