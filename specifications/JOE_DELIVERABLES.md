@@ -5,7 +5,7 @@ Last updated: 2026-05-26
 
 This document tracks Joe's hackathon deliverables for Pipeline (TMLS Agentic
 Hackathon). Pipeline is a text-first AI intake assistant for plumbing
-businesses (Jill's Plumbing for the demo).
+businesses (Pipe Dreams by Jill for the demo).
 
 Joe owns four areas:
 
@@ -232,7 +232,7 @@ appointment times**.
 {
   "booking_status": "link_sent",
   "booking_method": "calendly",
-  "scheduling_url": "https://calendly.com/jills-plumbing/consultation",
+  "scheduling_url": "https://calendly.com/pipe-dreams-by-jill/consultation",
   "instructions_to_customer": "Please choose the earliest available time that works for you.",
   "requires_jill_time_approval": false,
   "urgency_context": "priority",
@@ -251,7 +251,7 @@ appointment times**.
 ### Env / config
 
 - `CALENDLY_SCHEDULING_URL` — primary scheduling URL. Falls back to
-  `https://calendly.com/jills-plumbing/consultation` if unset.
+  `https://calendly.com/pipe-dreams-by-jill/consultation` if unset.
 - `CALENDLY_EVENT_TYPE_URI` — optional, only needed if/when we add the
   Calendly v2 event-type APIs.
 
