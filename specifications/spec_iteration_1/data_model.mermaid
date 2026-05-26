@@ -1,0 +1,119 @@
+classDiagram
+direction TB
+    class Contractor {
+	    +String id
+	    +String business_name
+	    +String contact_name
+	    +String email
+	    +String phone
+	    +String license_number
+	    +String logo_url
+    }
+
+    class Customer {
+	    +String id
+	    +String name
+	    +String email
+	    +String phone
+	    +String address
+	    +DateTime created_at
+    }
+
+    class Project {
+	    +String id
+	    +String contractor_id
+	    +String description
+	    +String trade_type
+	    +Enum urgency
+	    +Enum status
+	    +DateTime created_at
+	    +DateTime updated_at
+    }
+
+    class Quote {
+	    +String id
+	    +Int version
+	    +String job_description
+	    +String scope
+	    +Float cost_min
+	    +Float cost_max
+	    +Enum status
+	    +String contractor_comment
+	    +DateTime created_at
+	    +DateTime reviewed_at
+    }
+
+    class Booking {
+	    +String id
+	    +String calendly_event_uri
+	    +String calendly_event_uuid
+	    +String booked_slot_text
+	    +DateTime start_time
+	    +DateTime end_time
+	    +Enum status
+	    +DateTime confirmed_at
+    }
+
+    class ConversationLog {
+	    +String id
+	    +Enum channel
+	    +Enum urgency_detected
+	    +String system_prompt
+	    +String model_used
+	    +Int turn_count
+	    +Int message_count
+	    +Int total_prompt_tokens
+	    +Int total_completion_tokens
+	    +Int total_tokens
+	    +Float total_cost_usd
+	    +Int total_latency_ms
+	    +DateTime started_at
+	    +DateTime ended_at
+    }
+
+    class Message {
+	    +String id
+	    +String conversation_id
+	    +Enum role
+	    +String content
+	    +Boolean has_images
+	    +DateTime timestamp
+	    +Int token_count
+    }
+
+    class Image {
+	    +String id
+	    +String message_id
+	    +String gcs_path
+	    +String gcs_url
+	    +String filename
+	    +String mime_type
+	    +Int size_bytes
+	    +Enum source
+	    +String ai_description
+	    +Boolean analyzed
+	    +DateTime uploaded_at
+	    +DateTime analyzed_at
+    }
+
+    class PipelineTurnLog {
+	    +String id
+	    +String conversation_log_id
+	    +Int turn_number
+	    +Enum sub_agent
+	    +String routing_decision
+	    +Enum state_before
+	    +Enum state_after
+	    +Int latency_ms
+	    +DateTime timestamp
+    }
+
+    Contractor "1" --> "*" Customer : manages
+    Customer "1" --> "*" Project : has
+    Customer "1" --> "*" ConversationLog : has
+    ConversationLog "*" ..> "1" Project : initiates
+    ConversationLog "1" --> "*" Message : contains
+    ConversationLog "1" --> "*" PipelineTurnLog : logged as
+    Project "1" --> "*" Quote : has
+    Project "1" --> "0..1" Booking : booked as
+    Message "1" --> "*" Image : contains

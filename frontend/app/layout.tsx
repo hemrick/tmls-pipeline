@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 
+import TopNav from "./components/TopNav";
+
 export const metadata = {
-  title: "Pipeline",
-  description: "Hello world frontend ↔ backend connectivity check",
+  title: "Jill's Plumbing",
+  description: "AI intake assistant",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -13,9 +15,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           fontFamily:
             "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
           margin: 0,
+          background: "#f3f4f6",
+          color: "#111827",
+          display: "flex",
+          flexDirection: "column",
+          height: "100dvh",
         }}
       >
-        {children}
+        <TopNav />
+        <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>{children}</div>
       </body>
     </html>
   );
