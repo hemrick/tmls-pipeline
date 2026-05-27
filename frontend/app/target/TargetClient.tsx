@@ -30,7 +30,7 @@ interface ScreenMeta { title: string; subtitle?: string; withBack: boolean; back
 
 function screenMeta(screen: Screen, rows: IndexEntry[]): ScreenMeta {
   switch (screen) {
-    case "today":        return { title: "Today", subtitle: "Jill's Plumbing", withBack: false, backTo: "today" };
+    case "today":        return { title: "Today", subtitle: "Pipe Dreams By Jill", withBack: false, backTo: "today" };
     case "pipeline":     return { title: "Pipeline", subtitle: `${rows.filter(r => r.status !== "closed_done" && r.status !== "closed_no_action").length} active`, withBack: false, backTo: "today" };
     case "calendar":     return { title: "Schedule", subtitle: undefined, withBack: false, backTo: "today" };
     case "messages":     return { title: "Messages", subtitle: undefined, withBack: false, backTo: "today" };

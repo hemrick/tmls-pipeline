@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import TopNav from "./components/TopNav";
 
 export const metadata = {
-  title: "Jill's Plumbing",
+  title: "Pipe Dreams By Jill",
   description: "AI intake assistant",
 };
 

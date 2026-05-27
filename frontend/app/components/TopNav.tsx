@@ -7,7 +7,7 @@ const TABS = [
   { href: "/", label: "Customer View" },
   { href: "/customer-mic", label: "Customer View with Mic" },
   { href: "/dashboard", label: "Jill Dashboard" },
-  { href: "/target", label: "Dashboard Jill Cible" },
+  { href: "/target", label: "Jill Mobile" },
 ] as const;
 
 export default function TopNav() {

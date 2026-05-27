@@ -140,7 +140,16 @@ export default function ConvDetailMobile({
               </div>
             )}
           </div>
-          <div style={{ marginTop: 10 }}>
+          <div style={{
+            marginTop: 14, paddingTop: 14,
+            borderTop: `1px solid ${C.borderLight}`,
+          }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: C.textSecondary,
+              textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10,
+            }}>
+              Your decision
+            </div>
             <QuoteApprovalPanel
               apiUrl={apiUrl}
               conversationId={conversationId}
