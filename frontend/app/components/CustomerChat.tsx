@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import MessageBubble from "./MessageBubble";
 import QuoteCard from "./QuoteCard";
 import SlotButtons from "./SlotButtons";
+import TypingDots from "./TypingDots";
 import UrgencyChip from "./UrgencyChip";
 import WaitingForJill from "./WaitingForJill";
 import { getConversation, postChat } from "./api";
@@ -143,6 +144,8 @@ export default function CustomerChat({ apiUrl }: { apiUrl: string }) {
     lastTurn?.booking?.booking_status === "link_sent";
   const inputDisabled = loading || closed || isWaiting;
 
+  const showLogo = messages.length === 0;
+
   return (
     <div
       style={{
@@ -154,6 +157,21 @@ export default function CustomerChat({ apiUrl }: { apiUrl: string }) {
         background: "white",
       }}
     >
+      {showLogo && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "1.25rem 1rem 0.5rem",
+          }}
+        >
+          <img
+            src="/branding/pipe-dreams-by-jill-mark.svg"
+            alt="Pipe Dreams by Jill"
+            style={{ width: 180, maxWidth: "60%", height: "auto" }}
+          />
+        </div>
+      )}
       <header
         style={{
           padding: "0.9rem 1rem",

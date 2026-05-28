@@ -17,8 +17,10 @@ Plus the legacy /api/hello kept while the frontend is still on V0.
 
 from __future__ import annotations
 
+import json as _json
 import logging
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -32,6 +34,8 @@ from app import conversation_store as cs
 from app.agent import run_turn
 from app.services import quotes as quotes_service
 from app.voice import handle_voice_ws
+
+DOCS_DIR = Path(__file__).resolve().parent.parent / "documentations"
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("pipeline.api")
@@ -65,6 +69,104 @@ def health() -> dict:
 @app.get("/api/hello")
 def hello() -> dict:
     return {"message": "Hello from FastAPI"}
+
+
+# ---------------------------------------------------------------------------
+# /api/docs — project documentation (markdown files under backend/documentations)
+# ---------------------------------------------------------------------------
+
+
+def _doc_title(text: str, fallback: str) -> str:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("# "):
+            return stripped[2:].strip()
+        if stripped:
+            break
+    return fallback
+
+
+def _safe_doc_path(slug: str) -> Path:
+    # Disallow path traversal: slug must be a single .md filename.
+    if "/" in slug or "\\" in slug or ".." in slug:
+        raise HTTPException(status_code=400, detail="invalid doc slug")
+    path = (DOCS_DIR / f"{slug}.md").resolve()
+    if not str(path).startswith(str(DOCS_DIR.resolve())):
+        raise HTTPException(status_code=400, detail="invalid doc slug")
+    if not path.exists() or not path.is_file():
+        raise HTTPException(status_code=404, detail="doc not found")
+    return path
+
+
+def _read_doc_title(slug: str) -> str | None:
+    path = DOCS_DIR / f"{slug}.md"
+    if not path.exists() or not path.is_file():
+        return None
+    try:
+        return _doc_title(path.read_text(encoding="utf-8"), slug)
+    except OSError:
+        return None
+
+
+@app.get("/api/docs")
+def list_docs() -> dict:
+    """Return docs grouped into sections (driven by _index.json when present)."""
+    if not DOCS_DIR.exists():
+        return {"sections": []}
+
+    all_slugs = sorted(md.stem for md in DOCS_DIR.glob("*.md"))
+    manifest_path = DOCS_DIR / "_index.json"
+
+    sections: list[dict] = []
+    referenced: set[str] = set()
+
+    if manifest_path.exists():
+        try:
+            manifest = _json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, _json.JSONDecodeError):
+            manifest = {}
+        for section in manifest.get("sections", []):
+            docs_out: list[dict] = []
+            for slug in section.get("docs", []):
+                title = _read_doc_title(slug)
+                if title is None:
+                    continue
+                docs_out.append({"slug": slug, "title": title})
+                referenced.add(slug)
+            sections.append(
+                {
+                    "id": section.get("id") or "",
+                    "title": section.get("title") or "",
+                    "audience": section.get("audience"),
+                    "docs": docs_out,
+                }
+            )
+
+    # Surface any docs not referenced by the manifest in an "Other" section
+    # so adding a new .md file is visible without editing the manifest.
+    leftovers = [s for s in all_slugs if s not in referenced]
+    if leftovers:
+        sections.append(
+            {
+                "id": "other",
+                "title": "Other",
+                "audience": None,
+                "docs": [
+                    {"slug": s, "title": _read_doc_title(s) or s}
+                    for s in leftovers
+                ],
+            }
+        )
+
+    return {"sections": sections}
+
+
+@app.get("/api/docs/{slug}")
+def get_doc(slug: str) -> dict:
+    """Return the raw markdown content of a single documentation file."""
+    path = _safe_doc_path(slug)
+    text = path.read_text(encoding="utf-8")
+    return {"slug": slug, "title": _doc_title(text, slug), "content": text}
 
 
 # ---------------------------------------------------------------------------

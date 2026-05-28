@@ -1,0 +1,110 @@
+# Scenarios
+
+Pipeline Demo Scenarios.
+
+## At a glance
+
+| # | Scenario | Customer signal | What the agent does |
+|---|---|---|---|
+| 1 | [Scenario 1 — Quote / booking flow](#scenario-1-quote-booking-flow) | Wants something installed or scheduled work | Scope the job, draft a quote for Jill's review, then offer slots. |
+| 2 | [Scenario 2 — Flooding / emergency](#scenario-2-flooding-emergency) | Active damage, water everywhere | Emergency mode: safety guidance, alert Jill. No quote, no booking. |
+| 3 | [Scenario 3 — Gas smell / safety escalation](#scenario-3-gas-smell-safety-escalation) | Safety hazard, possibly life-threatening | Tell customer to leave the area and call 911 / gas line. Alert Jill. No automation. |
+
+## Scenario 1: Quote / booking flow
+
+**Customer input:**
+"I need a dishwasher installed next week. It's a new install and I don't think there is an existing water supply or drain."
+
+**Expected behaviour:**
+
+- Do not classify as Emergency
+- Ask a few useful scoping questions
+- Capture customer name/contact when appropriate
+- Recognize that no existing water supply/drain increases complexity
+- Either generate a cautious quote range or mark as site visit required
+- Quote should go to Jill for review before being sent
+- After customer accepts, show booking/appointment options
+
+**Good agent behaviour:**
+
+- Ask if there is an existing dishwasher
+- Ask whether there is water supply/drain nearby
+- Mention that final pricing depends on site inspection
+- Send quote to Jill for review
+- Then move toward booking after approval/acceptance
+
+**Dashboard expectation:**
+
+- Priority or Scheduled badge, depending on how we want to frame it
+- Quote card visible
+- Quote status visible
+- Jill approval/review path visible
+- Booking state visible after customer chooses a slot
+
+**Demo value:**
+
+This shows the business workflow: messy request → structured scope → quote → Jill review → booking.
+
+## Scenario 2: Flooding / emergency
+
+**Customer input:**
+"I need help, there is flooding in my kitchen because of my sink."
+
+**Expected behaviour:**
+
+- Classify as Emergency
+- Show red Emergency state
+- Give immediate first-step guidance
+- Tell customer Jill has been alerted
+- Do not ask a long list of intake questions first
+- Do not generate quote first
+- Do not push Calendly first
+
+**Good agent response:**
+
+"Please turn off the main water valve if it's safe to do so, and stay away from electrical outlets near the water. Jill has been alerted and will call you shortly."
+
+**Dashboard expectation:**
+
+- New conversation appears near the top
+- Emergency badge is visible
+- Transcript is captured
+- Jill notification / alert is visible
+- Status should feel urgent, not routine
+
+**Demo value:**
+
+This shows Pipeline can triage urgent customer requests and route them to Jill instead of treating every job like normal booking.
+
+## Scenario 3: Gas smell / safety escalation
+
+**Customer input:**
+"I smell gas near my hot water heater in the basement. Can someone come fix it?"
+
+**Expected behaviour:**
+
+- Classify as Safety Escalation / L0 safety
+- Use amber Safety Escalation state if available
+- Give safety guidance immediately
+- Tell customer to leave the area/home if safe
+- Tell customer to call gas emergency / 911 if anyone feels unwell
+- Alert Jill for follow-up
+- No quote
+- No Calendly
+- No normal plumber booking flow
+
+**Good agent response:**
+
+"If you smell gas, leave the area immediately if it's safe to do so. Do not touch switches, outlets, or appliances. Call your gas emergency line or 911 if anyone feels unwell. Jill has been alerted for follow-up."
+
+**Dashboard expectation:**
+
+- Safety Escalation or L0 safety state
+- No quote generated
+- No booking/Calendly flow
+- Clear reason: gas smell near water heater
+- Jill follow-up shown
+
+**Demo value:**
+
+This is the "agent has judgment" case. It shows Pipeline knows when not to automate.

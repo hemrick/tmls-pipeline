@@ -1,0 +1,20 @@
+{
+  "sections": [
+    {
+      "id": "business-needs",
+      "title": "I. Business Needs",
+      "audience": "For business users.",
+      "docs": ["scenarios", "agent-rules-and-tools"]
+    },
+    {
+      "id": "agentic-architecture",
+      "title": "II. Agentic Architecture",
+      "audience": "For technical people.",
+      "docs": [
+        "text-agent-architecture",
+        "voice-agent-architecture",
+        "webapp-architecture"
+      ]
+    }
+  ]
+}
