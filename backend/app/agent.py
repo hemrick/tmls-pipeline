@@ -236,9 +236,20 @@ async def run_turn(
 
     # 4. Seed the working state from the previous last_turn + triage.
     previous = state["last_turn"]
+
+    # Urgency is sticky: once a conversation reaches a higher severity level
+    # it never drops within the same conversation. A customer saying "ok"
+    # after reporting flooding should not flip the agent out of SAFETY MODE.
+    _URGENCY_RANK = {"emergency": 3, "priority": 2, "scheduled": 1}
+    prev_urgency = previous.get("urgency") or "scheduled"
+    new_urgency = triage["urgency_level"]
+    sticky_urgency = max(
+        [prev_urgency, new_urgency], key=lambda u: _URGENCY_RANK.get(u, 0)
+    )
+
     seed = cs.TurnSnapshot(
         status=previous.get("status", "new"),
-        urgency=triage["urgency_level"],
+        urgency=sticky_urgency,
         customer=dict(previous.get("customer", {}) or {}),
         triage=triage,
         quote=previous.get("quote"),

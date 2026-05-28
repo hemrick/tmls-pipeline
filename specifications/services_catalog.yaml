@@ -1,0 +1,449 @@
+# Pipeline -- Services Catalog (canonical)
+#
+# Merged from:
+#   - specifications/services_catalog.md  (labour, parts, triage questions)
+#   - specifications/plumbing_triage_knowledge.md  (urgency signals)
+#   - backend/app/services/quotes.py _TEMPLATES  (scope bullets, price ranges)
+#   - specifications/quote_generation_inputs.md  (hour estimates, quote vs estimate rules)
+#
+# Used by:
+#   - quotes.py  -- scope bullets and price ranges for quote generation
+#   - agent system prompt  -- triage questions and urgency signals
+#   - dashboard  -- parts info, confidence score, caveats
+#
+# Jurisdiction: Ontario, Canada (GTA).
+# Labour is billable hours only. Does not include travel, parts markup, or HST.
+# All CAD prices are estimates. Final price confirmed on-site.
+#
+# Urgency labels: emergency | priority | scheduled | out-of-scope
+
+services:
+
+  hot_water_tank:
+    display_name: "Hot water tank -- repair or replacement"
+    urgency_default: "priority"
+    labour_min: "2 hours"
+    labour_max: "4 hours"
+    typical_parts: >
+      New tank if replacing (customer sources or Jill supplies).
+      Flex connectors (~$20), expansion tank (~$50-80) if required by code,
+      new TPR valve if needed, copper fittings if existing connections are corroded.
+    triage_questions:
+      - "Gas or electric?"
+      - "Getting any hot water at all, or completely cold?"
+      - "How old is the tank? (Usually printed on the label on the side.)"
+      - "Any water pooling at the base of the tank?"
+      - "For gas: can you see the pilot light, or do you smell gas at all?"
+      - "Where is the tank -- basement, utility closet, other?"
+      - "Tight space or easy access?"
+      - "Should Jill source the replacement tank, or will you supply it?"
+    scope:
+      - "Inspect hot water tank and heating components"
+      - "Diagnose root cause (element, thermostat, gas valve, etc.)"
+      - "Repair or recommend replacement if needed"
+    price_range_cad: "$250-$600"
+    caveats:
+      - "Tanks 10+ years old -- assume replacement, not repair, for this estimate."
+      - "If the tank needs replacing, parts cost varies significantly by size and fuel type. Final price confirmed on-site."
+      - "Gas work requires a TSSA G2 gas-fitter ticket. Jill will confirm scope before scheduling."
+    confidence_baseline: "medium"
+    confidence_reason: "Don't yet know tank age or whether this is a repair vs. full replacement."
+    urgency_signals:
+      - {condition: "gas smell near tank", urgency: "emergency"}
+      - {condition: "active leak from base of tank", urgency: "priority"}
+      - {condition: "no hot water + winter + only bathroom", urgency: "priority"}
+      - {condition: "no hot water + summer + alternate bathroom available", urgency: "scheduled"}
+    site_visit_required: false
+    requires_permit: false
+
+  leaking_faucet:
+    display_name: "Faucet -- dripping or leaking"
+    urgency_default: "scheduled"
+    labour_min: "10 min"
+    labour_max: "30 min"
+    typical_parts: >
+      Often a $5-15 cartridge or washer. May need a supply line adapter.
+      Braided supply lines if existing ones are corroded.
+    triage_questions:
+      - "Dripping from the spout when the tap is off, leaking from the base, or leaking under the sink?"
+      - "Hot side, cold side, or both?"
+      - "How long has it been dripping?"
+    scope:
+      - "Inspect faucet and supply lines"
+      - "Diagnose source of leak (cartridge, washer, supply line, or seal)"
+      - "Repair or replace components as needed"
+    price_range_cad: "$150-$300"
+    caveats:
+      - "Drip from spout is usually a cartridge or washer -- straightforward fix."
+      - "Leak from the base may involve the faucet body and could require full replacement."
+    confidence_baseline: "medium"
+    confidence_reason: "Source of leak determines scope. Will confirm on-site."
+    urgency_signals:
+      - {condition: "active drip from base + cannot control", urgency: "priority"}
+      - {condition: "drip from spout only", urgency: "scheduled"}
+    site_visit_required: false
+    requires_permit: false
+
+  faucet_install:
+    display_name: "Faucet -- installation (bathroom or kitchen)"
+    urgency_default: "scheduled"
+    labour_min: "10 min"
+    labour_max: "30 min"
+    typical_parts: >
+      Often need a $5-15 supply line adapter.
+      Braided supply lines if not included with faucet.
+    triage_questions:
+      - "Do you already have the faucet, or does Jill need to source it?"
+      - "How many holes does your sink have -- 1, 2, or 3?"
+      - "Does the faucet you have match the hole configuration?"
+      - "Is the existing faucet currently working (non-urgent replacement)?"
+    scope:
+      - "Remove existing faucet and supply lines"
+      - "Install new faucet per manufacturer instructions"
+      - "Connect supply lines and test for leaks"
+    price_range_cad: "$100-$250"
+    caveats:
+      - "If customer supplies the faucet, confirm hole count matches before Jill arrives."
+      - "Older homes may have corroded supply line connections that add time."
+    confidence_baseline: "high"
+    confidence_reason: "Straightforward install once fixture and hole count are confirmed."
+    urgency_signals:
+      - {condition: "existing faucet functional, upgrade only", urgency: "scheduled"}
+    site_visit_required: false
+    requires_permit: false
+
+  dishwasher_install:
+    display_name: "Dishwasher -- installation or reinstallation"
+    urgency_default: "scheduled"
+    labour_min: "20 min"
+    labour_max: "45 min"
+    typical_parts: >
+      Usually ships with the dishwasher. May need a $10-20 drain hose extension
+      or elbow fitting if the drain connection doesn't reach.
+    triage_questions:
+      - "Replacing an existing dishwasher, or new install into an empty space?"
+      - "Is the dishwasher new or used?"
+      - "Do you know if it will fit the current opening? (Standard is 24 inches.)"
+      - "Do you have an existing water supply line and drain hookup under the sink?"
+    scope:
+      - "Disconnect and remove existing dishwasher if present"
+      - "Install and level new dishwasher"
+      - "Connect supply line and drain; leak test"
+    price_range_cad: "$150-$350"
+    caveats:
+      - "If supply line and drain hookup are not already in place, rough-in work is additional."
+      - "Used dishwashers sometimes arrive with parts missing -- confirm before scheduling."
+    confidence_baseline: "high"
+    confidence_reason: "Straightforward if rough-ins are in place and unit is confirmed to fit."
+    urgency_signals:
+      - {condition: "dishwasher actively leaking", urgency: "priority"}
+      - {condition: "install with rough-ins ready", urgency: "scheduled"}
+    site_visit_required: false
+    requires_permit: false
+
+  drain_unclog:
+    display_name: "Drain -- unclog (kitchen, bathroom, or floor drain)"
+    urgency_default: "priority"
+    labour_min: "1 hour"
+    labour_max: "5 hours"
+    typical_parts: >
+      Cannot predict. May need a drain snake, hydro-jet access, or camera
+      inspection depending on location and depth of clog.
+    triage_questions:
+      - "Which drain -- kitchen sink, bathroom sink, tub, floor drain, or main to street?"
+      - "Is water actively backing up into the house right now?"
+      - "Stop using water appliances until Jill arrives."
+      - "Do you have a backflow prevention valve installed?"
+      - "When did it start? Sudden or getting worse over time?"
+      - "How deep is standing water, if any?"
+      - "Have you tried anything -- plunger, drain cleaner?"
+    scope:
+      - "Inspect affected drain and assess blockage location"
+      - "Clear blockage using appropriate tools (snake, hydro-jet, etc.)"
+      - "Confirm flow is restored and check for underlying damage"
+    price_range_cad: "$150-$450"
+    caveats:
+      - "Parts and method depend on clog location -- cannot predict until Jill inspects."
+      - "If backing up into multiple fixtures, this may be a main line blockage (higher end of range)."
+      - "Active sewage backup into living space may require emergency response."
+    confidence_baseline: "low"
+    confidence_reason: "Clog location and severity not yet confirmed."
+    urgency_signals:
+      - {condition: "water actively backing up into house", urgency: "emergency"}
+      - {condition: "only toilet in home + fully blocked", urgency: "priority"}
+      - {condition: "single fixture, slow drain only", urgency: "scheduled"}
+    site_visit_required: false
+    requires_permit: false
+
+  toilet_repair:
+    display_name: "Toilet -- not flushing or running constantly"
+    urgency_default: "scheduled"
+    labour_min: "15 min"
+    labour_max: "1 hour"
+    typical_parts: >
+      Flapper ($5-10), fill valve ($15-25), or flush valve depending on diagnosis.
+      Rarely need a full rebuild kit (~$30).
+    triage_questions:
+      - "Not flushing at all, flushing weakly, or running and filling constantly after a flush?"
+      - "How old is the toilet?"
+      - "Any visible damage inside the tank -- broken arm, deteriorated rubber parts?"
+      - "Has this happened before, or is it new?"
+      - "Is it the only toilet in the home?"
+    scope:
+      - "Inspect toilet tank and flush mechanism"
+      - "Diagnose issue (flapper, fill valve, flush valve, etc.)"
+      - "Replace faulty component"
+    price_range_cad: "$150-$400"
+    caveats:
+      - "If the only toilet in the home, urgency is higher -- flag this."
+      - "Running toilet is usually a flapper or fill valve -- quick fix, low end of range."
+      - "Weak flush may indicate mineral build-up -- takes longer to diagnose."
+    confidence_baseline: "medium"
+    confidence_reason: "Exact part depends on diagnosis; won't know until Jill opens the tank."
+    urgency_signals:
+      - {condition: "toilet overflowing, can't stop it", urgency: "emergency"}
+      - {condition: "only toilet in home + not flushing", urgency: "priority"}
+      - {condition: "running constantly + alternate bathroom available", urgency: "scheduled"}
+    site_visit_required: false
+    requires_permit: false
+
+  toilet_rocking:
+    display_name: "Toilet -- rocking or moving at base"
+    urgency_default: "priority"
+    labour_min: "10 min"
+    labour_max: "45 min"
+    typical_parts: >
+      Wax ring/seal (~$10). Toilet bolts if corroded. Shims if floor is uneven.
+    triage_questions:
+      - "Water on the floor only after flushing, or all the time?"
+      - "Which brand and model of toilet, if known? (Helps with wax seal sizing.)"
+      - "Easy access to the floor bolts on either side of the base?"
+      - "Any sign of water damage or soft flooring around the base?"
+      - "Has this been going on a long time?"
+    scope:
+      - "Remove and inspect toilet and wax seal"
+      - "Inspect subfloor for water damage"
+      - "Re-seat toilet with new wax ring and bolts; shim if needed"
+    price_range_cad: "$150-$350"
+    caveats:
+      - "If the seal has been failing for a long time, subfloor damage is possible -- adds cost."
+      - "Price assumes subfloor is solid. Damaged subfloor is additional work."
+    confidence_baseline: "medium"
+    confidence_reason: "Subfloor condition unknown until Jill lifts the toilet."
+    urgency_signals:
+      - {condition: "water on floor constantly (seal failed)", urgency: "priority"}
+      - {condition: "rocking only, no water visible", urgency: "scheduled"}
+    site_visit_required: false
+    requires_permit: false
+
+  pipe_repair:
+    display_name: "Pipe repair -- burst, pinhole, or split"
+    urgency_default: "emergency"
+    labour_min: "1 hour"
+    labour_max: "6 hours"
+    typical_parts: >
+      Cannot predict. May need couplings, pipe sections, fittings, solder, or
+      push-fit connectors depending on pipe type and access.
+    triage_questions:
+      - "Is water shut off to the affected area? If not, turn off the main."
+      - "Is water still actively spraying, or has it stopped?"
+      - "Where is the damaged pipe -- under sink, in wall, basement ceiling, crawl space?"
+      - "Do you know what type of pipe -- copper, PVC, galvanized, PEX?"
+      - "How old is the house?"
+      - "Has this section had problems before?"
+    scope:
+      - "Locate and assess damaged section"
+      - "Cut out damaged pipe and replace with appropriate fitting or section"
+      - "Pressure test and check for secondary damage"
+    price_range_cad: "$250-$800"
+    caveats:
+      - "Parts and method depend on pipe type and access -- cannot predict until Jill sees it."
+      - "Older homes with galvanized pipe often have multiple weakened sections nearby."
+      - "Wall or ceiling access may require drywall removal -- patch work is additional."
+    confidence_baseline: "low"
+    confidence_reason: "Pipe type, access, and extent of damage unknown until on-site."
+    urgency_signals:
+      - {condition: "active uncontrolled spray", urgency: "emergency"}
+      - {condition: "contained drip after shut-off", urgency: "priority"}
+      - {condition: "visible pinhole, slow drip, no wall breach", urgency: "priority"}
+    site_visit_required: false
+    requires_permit: false
+
+  shut_off_valve:
+    display_name: "Shut-off valve -- replacement"
+    urgency_default: "priority"
+    labour_min: "30 min"
+    labour_max: "2 hours"
+    typical_parts: >
+      New quarter-turn ball valve ($15-40 depending on size).
+      Compression fittings or solder depending on pipe type.
+    triage_questions:
+      - "Which valve -- under a sink, behind a toilet, at the main, or elsewhere?"
+      - "Is it currently leaking, stuck, or completely failed?"
+      - "Has this valve been turned in the last few years, or untouched for a long time?"
+      - "What type of pipe connects to it, if you know -- copper, PVC, galvanized?"
+      - "Easy access, or inside a wall or tight cabinet?"
+    scope:
+      - "Isolate water supply to affected section"
+      - "Remove old valve and install new quarter-turn ball valve"
+      - "Test operation and check for leaks"
+    price_range_cad: "$150-$350"
+    caveats:
+      - "Old gate valves that haven't moved in decades may not close fully -- Jill may need to work from the main."
+      - "Soldered copper connections take more time than compression fittings."
+    confidence_baseline: "medium"
+    confidence_reason: "Access and pipe type affect labour time significantly."
+    urgency_signals:
+      - {condition: "valve actively leaking", urgency: "priority"}
+      - {condition: "valve stuck or won't close fully but not leaking", urgency: "scheduled"}
+    site_visit_required: false
+    requires_permit: false
+
+  hose_bib:
+    display_name: "Outdoor hose bib / tap -- replacement"
+    urgency_default: "scheduled"
+    labour_min: "30 min"
+    labour_max: "1.5 hours"
+    typical_parts: >
+      New frost-free hose bib ($20-45). Pipe fittings or solder if access requires it.
+      Plumber's tape.
+    triage_questions:
+      - "Dripping constantly at the spout, leaking at the handle, or broken off?"
+      - "Is it frost-free (anti-siphon) -- does it stick out further than a standard tap?"
+      - "Easy access to the interior shutoff for this bib, usually in the basement?"
+      - "Any sign of water damage on the interior wall behind it?"
+    scope:
+      - "Shut off interior supply to bib"
+      - "Remove old hose bib and inspect interior pipe"
+      - "Install new frost-free hose bib; seal and test"
+    price_range_cad: "$150-$300"
+    caveats:
+      - "If the interior pipe shows freeze damage, additional repair is needed."
+      - "Interior wall access may be required if the pipe froze and split inside."
+    confidence_baseline: "high"
+    confidence_reason: "Straightforward replacement if no interior damage."
+    urgency_signals:
+      - {condition: "leak visible on interior wall side", urgency: "emergency"}
+      - {condition: "outdoor spigot dripping only", urgency: "scheduled"}
+    site_visit_required: false
+    requires_permit: false
+
+  garbage_disposal_install:
+    display_name: "Garbage disposal -- installation"
+    urgency_default: "scheduled"
+    labour_min: "30 min"
+    labour_max: "1 hour"
+    typical_parts: >
+      Usually ships with the unit (mounting assembly, drain elbow, splash guard).
+      May need a P-trap extension ($5-10) if drain connection doesn't line up.
+    triage_questions:
+      - "Do you already have the disposal unit, or does Jill need to source one?"
+      - "Replacing an existing disposal, or new install?"
+      - "Is there an electrical outlet under the sink (standard 3-prong)?"
+      - "If replacing: what brand and model is the existing one?"
+      - "Any dishwasher drain connected to the current setup?"
+    scope:
+      - "Remove existing disposal if present"
+      - "Install new unit with mounting assembly and drain connections"
+      - "Connect and test electrical; run water and drain test"
+    price_range_cad: "$150-$300"
+    caveats:
+      - "No electrical outlet under the sink means electrical work is needed first -- not included in this quote."
+      - "Same-brand replacement often reuses the existing mount, saving time."
+    confidence_baseline: "high"
+    confidence_reason: "Straightforward install once unit and electrical outlet are confirmed."
+    urgency_signals:
+      - {condition: "disposal actively leaking", urgency: "priority"}
+      - {condition: "install or replacement, no leak", urgency: "scheduled"}
+    site_visit_required: false
+    requires_permit: false
+
+  leak_investigation:
+    display_name: "Leak investigation -- source unknown"
+    urgency_default: "priority"
+    labour_min: "30 min"
+    labour_max: "5 hours"
+    typical_parts: >
+      Cannot predict until source is located. This quote covers investigation only.
+      Repair is quoted separately once the cause is confirmed.
+    triage_questions:
+      - "Is this urgent -- is water actively coming through right now?"
+      - "Is the water under control for now (bucket, towels)?"
+      - "Turn off or unplug electrical appliances near the water immediately."
+      - "What room is water appearing in?"
+      - "What room or fixture is directly above it?"
+      - "How old is the house?"
+      - "When was the source room last renovated?"
+      - "Any stains or soft spots suggesting this has been happening a while?"
+    scope:
+      - "Inspect affected area and trace water to its source"
+      - "Document findings and identify repair path"
+      - "Provide repair quote once source is confirmed"
+    price_range_cad: "$150-$400"
+    caveats:
+      - "This quote covers investigation only. Repair is quoted separately once Jill has found the source."
+      - "Wide range reflects that some leaks take 30 minutes to trace and others require opening walls."
+    confidence_baseline: "low"
+    confidence_reason: "Source of leak unknown -- cannot scope repair until investigated."
+    urgency_signals:
+      - {condition: "water actively coming through ceiling or floor", urgency: "emergency"}
+      - {condition: "water contained, staining visible", urgency: "priority"}
+      - {condition: "slow seepage, no visible damage spreading", urgency: "scheduled"}
+    site_visit_required: true
+    requires_permit: false
+
+  default:
+    display_name: "General plumbing -- unspecified"
+    urgency_default: "scheduled"
+    labour_min: "varies"
+    labour_max: "varies"
+    typical_parts: "Cannot predict without more information."
+    triage_questions:
+      - "Can you describe what's happening in a bit more detail?"
+      - "When did this start?"
+      - "Is water currently leaking, or is the issue contained?"
+      - "How old is the house?"
+      - "When was this area of the home last renovated?"
+    scope:
+      - "On-site inspection"
+      - "Diagnose root cause"
+      - "Repair or recommend next steps"
+    price_range_cad: "$150-$500"
+    caveats:
+      - "This is a general estimate. Scope and price confirmed on-site."
+    confidence_baseline: "low"
+    confidence_reason: "Insufficient information to scope accurately."
+    urgency_signals: []
+    site_visit_required: false
+    requires_permit: false
+
+# ---------------------------------------------------------------------------
+# Site-visit-required work (no phone quote possible)
+# ---------------------------------------------------------------------------
+#
+# These job types must NOT get an auto-generated quote. Flag for Jill review
+# and a site visit instead.
+#
+# Trigger site_visit_required = true when the customer mentions:
+#   - Wet drywall, hidden leak, stains spreading
+#   - Multiple problems in different rooms (bundled job)
+#   - Renovation, rough-in changes, or new fixture locations
+#   - Permit-requiring work (backwater valve, sewer line, gas line, lead service)
+#   - Recurring problem ("third time this year")
+#   - Customer-supplied fixture not yet arrived, appointment > 5 business days out
+#   - Active emergency (emergency urgency path bypasses quoting entirely)
+
+# ---------------------------------------------------------------------------
+# Quote vs. estimate guidance (from quote_generation_inputs.md)
+# ---------------------------------------------------------------------------
+#
+# Quote (fixed range): single defined task, existing rough-ins, standard parts,
+#   < 4 hours, no demolition, customer and plumber agree on scope.
+#
+# Estimate (variable): bundled tasks, unknown scope, permits required,
+#   > 4 hours, demolition or digging expected.
+#
+# For estimates, add to caveats:
+#   "This is an estimate based on the description provided. Final pricing
+#    confirmed on-site after inspection. Additional charges may apply if
+#    scope expands."

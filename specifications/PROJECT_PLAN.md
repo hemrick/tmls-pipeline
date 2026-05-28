@@ -1,8 +1,8 @@
 # Pipeline Project Plan - Epic-Level Breakdown
 
 **Build Duration:** 2 days (Hackathon)  
-**Last Updated:** May 25, 2026  
-**Status:** Planning Phase  
+**Last Updated:** May 28, 2026  
+**Status:** FINAL PUSH -- 4 hours to submission  
 **Target:** ~17 high-level epics, max 60 tasks total (14 implementation + 3 design)
 
 ---
@@ -19,27 +19,42 @@
 
 ---
 
-## Epic Summary (Design + Implementation)
+## TODAY'S PRIORITY LIST (4 hours to deadline)
+
+| # | Task | Owner | Est. | Why it matters |
+|---|------|-------|------|----------------|
+| **1** | Fix conversation flow: ask problem BEFORE contact info; add scoping for scheduled jobs | Jen | 30 min | Single biggest demo-killer. Agent currently opens with "give me your name/phone/email" before knowing the problem. Scheduled jobs never get scoped. |
+| **2** | End-to-end smoke test: run all 3 demo scenarios against real backend (or mock) | All | 30 min | Nothing else matters if the chain is broken. Run demo_booking_flow.py, demo_emergency.py, demo_quote_flow.py. Fix whatever breaks. |
+| **3** | Verify quote display on customer side in /target mobile view | Mateen | 20 min | ConvDetailMobile shows the quote card to Jill -- confirm customer chat also shows approved quote, not just "under review". |
+| **4** | Demo rehearsal x2 -- full run-through with narration | All | 45 min | Team agreed: 2 rehearsals minimum before stage. No surprises. |
+| **5** | Record video | Joe / All | 45 min | Required for submission. Script it before recording. |
+| **6** | Submit | Joe | 15 min | -- |
+
+**Do NOT spend time on:** Calendly embed, desktop /dashboard polish, voice channel, analytics, additional services.
+
+---
+
+## Epic Summary (Design + Implementation) -- UPDATED May 28
 
 | Epic | Title | Owner | Status | Quality |
 |------|-------|-------|--------|---------|
 | **D1** | Domain, Data & Observability Models | Mateen | ✅ done | 🥇 gold |
 | **D2** | API & System Architecture | Jen / Emeric | ✅ done | 🥇 gold |
-| **D3** | Dashboard & Chat UI Design | Calan / Joe | in progress | 🥈 silver -- badge label open |
-| **E1** | Infrastructure & DevOps Setup | Emeric | ✅ done | 🥇 gold |
-| **E2** | Agent Architecture Implementation | Emeric | 🔴 not started -- blocks E10, E11, E12 -- target for today | -- |
-| **E3** | REST API Implementation (FastAPI) | Emeric | designed not built | 🥉 bronze -- scaffold only |
-| **E4** | Backend Storage & Persistence | Mateen | started | 🥉 bronze -- E4-2 missing |
-| **E5** | Logging, Debug & Observability | Emeric | not started (minimal scope) | -- |
-| **E6** | Knowledge Base & System Prompt | Jen | 🟡 in progress -- match top 50 problems in Slack | 🥉 bronze |
-| **E7** | Dashboard UI Implementation | Mateen | 🟡 in progress -- rebuild on updated Calan UI | 🥉 bronze |
-| **E8** | ~~Chat UI~~ | — | removed | -- |
-| **E9** | Triage & Urgency Logic | Joe | ✅ done | 🥇 gold -- tests + demo scenarios |
-| **E10** | Scheduling & Calendar Logic | Emeric or Mateen | 🟡 just started (1/4 tasks done) | 🥉 bronze |
-| **E11** | Quote Generation & Approval | Jen | not started | -- |
-| **E12** | End-to-End Integration & Demo | All | 🔴 blocked -- needs E2 + E6 + E10 + E11 | -- |
-| **E13** | Demo Submission | Joe | not started | -- |
-| **E14** | Voice & Messaging Channel Integration | Mateen | not started (stretch -- after E12) | -- |
+| **D3** | Dashboard & Chat UI Design | Calan / Joe | ✅ done | 🥇 gold -- mobile mockup fully implemented |
+| **E1** | Infrastructure & DevOps Setup | Emeric | ✅ done | 🥇 gold -- Cloud Run, Docker, deploy scripts |
+| **E2** | Agent Architecture Implementation | Emeric | ✅ done | 🥇 gold -- agent loop, TurnContext, all 6 tools wired |
+| **E3** | REST API Implementation (FastAPI) | Emeric | ✅ done | 🥈 silver -- all endpoints live; error handling partial |
+| **E4** | Backend Storage & Persistence | Mateen | ✅ done | 🥈 silver -- local + GCS, conversation index, llm_log |
+| **E5** | Logging, Debug & Observability | Emeric | ✅ done | 🥉 bronze -- llm_log per turn; no dashboard for it |
+| **E6** | Knowledge Base & System Prompt | Jen | 🟡 needs fix | 🥈 silver -- prompt solid BUT flow broken (contact before problem; scheduled jobs not scoped) |
+| **E7** | Dashboard UI Implementation | Mateen / Joe | ✅ done | 🥇 gold -- /target mobile: Today, Pipeline, Calendar, Emergencies, Quotes screens complete |
+| **E8** | ~~Chat UI~~ | -- | removed | -- |
+| **E9** | Triage & Urgency Logic | Joe | ✅ done | 🥇 gold -- classifier, tests, demo scripts all working |
+| **E10** | Scheduling & Calendar Logic | Emeric / Mateen | ✅ done | 🥈 silver -- demo slots, confirm_slot, booking flow done; Calendly not integrated (not needed for demo) |
+| **E11** | Quote Generation & Approval | Jen / Emeric | ✅ done | 🥈 silver -- full lifecycle: draft, Jill approve/reject, sent_to_customer, customer accept/decline. QuoteApprovalPanel wired. |
+| **E12** | End-to-End Integration & Demo | All | 🟡 in progress | 🥉 bronze -- mock server + demo scripts exist; flow issues in E6 need fix first; not yet rehearsed |
+| **E13** | Demo Submission | Joe | 🔴 not started | -- -- video + submission due in 4 hours |
+| **E14** | Voice & Messaging Channel Integration | Mateen | 🟡 partial | 🥉 bronze -- /api/voice WebSocket + /customer-mic page exist; stretch, skip for demo |
 
 ---
 
@@ -107,7 +122,7 @@
 | **D3-1** ✅ | Dashboard layout: Today view (alert cards, at-a-glance metrics, next up, this week). |
 | **D3-2** ✅ | Pipeline view: grouped by Needs you / Customer-side / Booked / Closed. Urgency badges. Inline actions. |
 | **D3-3** ✅ | Conversation detail view: transcript, customer info card, safety escalation notice, action buttons. |
-| **D3-4** ✅ | Component styling: colors, badges, typography. **OPEN: badge labels -- confirm emergency/priority/scheduled vs L0/L1/L2/L3 before Joe builds.** |
+| **D3-4** ✅ | Component styling: colors, badges, typography. Badge labels confirmed: `emergency / priority / scheduled / out-of-scope`. L0/L1/L2/L3 retired. |
 | **D3-5**  | finish design, mockup SMS to plumber | |
 
 **Deliverables:** 

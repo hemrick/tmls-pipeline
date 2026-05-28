@@ -5,13 +5,13 @@ export default function WaitingForJill() {
         border: "1px dashed #d1d5db",
         borderRadius: 8,
         padding: "0.7rem 0.9rem",
-        margin: "0.5rem 0",
+        margin: "0.5rem 0 0.3rem",
         background: "#fef3c7",
         color: "#78350f",
         fontSize: "0.9rem",
       }}
     >
-      Jill is reviewing your quote — I'll show it here as soon as she's done.
+      Jill is reviewing your quote — I'll show it here as soon as she's done and I will also email it to you.
     </div>
   );
 }

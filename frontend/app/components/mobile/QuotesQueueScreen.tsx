@@ -8,22 +8,86 @@ interface Props {
   onSelect: (id: string) => void;
 }
 
+const QUOTE_STATUS_RANK: Record<string, number> = {
+  pending_jill_review: 0,
+  approved: 1,
+  sent_to_customer: 2,
+  customer_accepted: 3,
+  customer_declined: 4,
+  revision_requested: 5,
+  rejected: 6,
+};
+
+const QUOTE_STATUS_LABEL: Record<string, string> = {
+  pending_jill_review: "Awaiting your review",
+  approved: "Approved",
+  sent_to_customer: "Sent to customer",
+  customer_accepted: "Accepted",
+  customer_declined: "Declined",
+  revision_requested: "Revision requested",
+  rejected: "Rejected",
+};
+
 export default function QuotesQueueScreen({ rows, onSelect }: Props) {
-  const quotes = rows.filter((r) => r.status === "quoted");
+  const allQuotes = rows
+    .filter((r) => r.status === "quoted" || r.quote_status)
+    .sort((a, b) => {
+      const ra = QUOTE_STATUS_RANK[a.quote_status ?? ""] ?? 99;
+      const rb = QUOTE_STATUS_RANK[b.quote_status ?? ""] ?? 99;
+      if (ra !== rb) return ra - rb;
+      return b.updated_at.localeCompare(a.updated_at);
+    });
+
+  const pending = allQuotes.filter((r) => r.quote_status === "pending_jill_review");
+  const others = allQuotes.filter((r) => r.quote_status !== "pending_jill_review");
 
   return (
     <div style={{ paddingTop: 14 }}>
-      <ContextBanner
-        icon="ti-file-invoice"
-        message="Quotes drafted by the agent are waiting for your approval before they're sent to the customer."
-        variant="quote"
-      />
-      {quotes.length === 0 ? (
-        <EmptyState icon="ti-circle-check" message="No quotes pending your approval." />
-      ) : (
-        quotes.map((r) => (
-          <DrillRow key={r.conversation_id} row={r} variant="quote" onSelect={onSelect} />
-        ))
+      {pending.length > 0 && (
+        <>
+          <ContextBanner
+            icon="ti-file-invoice"
+            message="These quotes need your review before they're sent to the customer."
+            variant="quote"
+          />
+          {pending.map((r) => (
+            <DrillRow key={r.conversation_id} row={r} variant="quote" onSelect={onSelect} />
+          ))}
+        </>
+      )}
+
+      {others.length > 0 && (
+        <>
+          <div style={{
+            fontSize: 11, fontWeight: 600, color: "#6b7280",
+            textTransform: "uppercase", letterSpacing: "0.05em",
+            padding: "10px 4px 6px",
+            marginTop: pending.length > 0 ? 8 : 0,
+          }}>
+            Other quotes
+          </div>
+          {others.map((r) => (
+            <div key={r.conversation_id} style={{ position: "relative" }}>
+              <DrillRow row={r} variant="quote" onSelect={onSelect} />
+              {r.quote_status && (
+                <div style={{
+                  position: "absolute", top: 12, right: 14,
+                  fontSize: 10, fontWeight: 500,
+                  color: "#6b7280",
+                  background: "#f3f4f6",
+                  borderRadius: 4,
+                  padding: "2px 6px",
+                }}>
+                  {QUOTE_STATUS_LABEL[r.quote_status] ?? r.quote_status}
+                </div>
+              )}
+            </div>
+          ))}
+        </>
+      )}
+
+      {allQuotes.length === 0 && (
+        <EmptyState icon="ti-file-invoice" message="No quotes yet." />
       )}
     </div>
   );

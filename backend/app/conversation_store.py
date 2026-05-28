@@ -136,6 +136,7 @@ class IndexEntry(TypedDict, total=False):
     summary: str
     urgency: Optional[UrgencyLevel]
     status: ConversationStatus
+    quote_status: Optional[str]
     sub_reason: Optional[SubReason]
     updated_at: str
 
@@ -251,6 +252,7 @@ def to_index_entry(state: ConversationState) -> IndexEntry:
         "",
     )
     summary = last_user_msg[:80]
+    quote = lt.get("quote") or {}
     return IndexEntry(
         conversation_id=state["conversation_id"],
         customer_name=customer.get("name"),
@@ -258,6 +260,7 @@ def to_index_entry(state: ConversationState) -> IndexEntry:
         summary=summary,
         urgency=lt.get("urgency"),
         status=lt.get("status", "new"),
+        quote_status=quote.get("quote_status") if quote else None,
         sub_reason=lt.get("sub_reason"),
         updated_at=state["updated_at"],
     )
