@@ -5,6 +5,9 @@ import TopNav from "./components/TopNav";
 export const metadata = {
   title: "Pipe Dreams by Jill",
   description: "AI intake assistant",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

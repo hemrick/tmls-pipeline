@@ -26,10 +26,14 @@ logger = logging.getLogger("pipeline.tools")
 # match the keys in services/quotes.py::_TEMPLATES.
 ALLOWED_PROBLEM_TYPES: tuple[str, ...] = (
     "leaking_faucet",
+    "faucet_install",
     "hot_water_tank",
     "dishwasher_install",
     "clogged_drain",
     "toilet_repair",
+    "toilet_install",
+    "pipe_repair",
+    "garbage_disposal_install",
     "default",
 )
 
@@ -129,7 +133,12 @@ class TurnContext:
         self._record("set_customer_info", {"name": name, "phone": phone, "email": email})
         return "ok"
 
-    def generate_quote_draft(self, problem_type: str, job_summary: str) -> dict:
+    def generate_quote_draft(
+        self,
+        problem_type: str,
+        job_summary: str,
+        scope: Optional[list[str]] = None,
+    ) -> dict:
         """Draft a price quote for the customer's job, pending Jill's review.
 
         Only call this once the problem is scoped enough to pick a problem
@@ -138,16 +147,27 @@ class TurnContext:
         is being reviewed and the chat will update once it's ready.
 
         Args:
-            problem_type: One of: leaking_faucet, hot_water_tank,
-                dishwasher_install, clogged_drain, toilet_repair, default.
-                Use "default" if no specific category fits.
-            job_summary: One short sentence describing the job for Jill's
-                review (e.g. "Hot water tank not producing heat.").
+            problem_type: One of: leaking_faucet, faucet_install,
+                hot_water_tank, dishwasher_install, clogged_drain,
+                toilet_repair, toilet_install, pipe_repair,
+                garbage_disposal_install, default.
+                Use "default" for multi-service jobs.
+            job_summary: One or two sentences covering ALL jobs and key
+                scoping details (e.g. "Leaking kitchen faucet (cartridge)
+                + running toilet (flapper). 1990 house, good access.").
+            scope: For multi-service jobs, pass an explicit list of scope
+                bullets — one or two bullets per task, clearly labelled.
+                Example: ["FAUCET: Replace kitchen faucet cartridge",
+                          "TOILET: Replace flapper and fill valve",
+                          "Test both fixtures and confirm no leaks"].
+                If omitted, the template for problem_type is used.
         """
         if problem_type not in ALLOWED_PROBLEM_TYPES:
             problem_type = "default"
         quote = quotes_service.generate_quote_draft(
-            job_summary=job_summary, problem_type=problem_type
+            job_summary=job_summary,
+            problem_type=problem_type,
+            scope=scope if scope else None,
         )
         self.working["quote"] = dict(quote)
         self.working["status"] = "quoted"
