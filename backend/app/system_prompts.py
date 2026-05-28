@@ -12,7 +12,7 @@ from app import conversation_store as cs
 
 
 CONTRACTOR_NAME = "Jill"
-BUSINESS_NAME = "Jill's Plumbing"
+BUSINESS_NAME = "Pipe Dreams by Jill"
 BUSINESS_TAGLINE = "Serving the GTA since 2003"
 
 

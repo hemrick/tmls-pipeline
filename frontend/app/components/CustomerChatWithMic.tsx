@@ -267,9 +267,7 @@ export default function CustomerChatWithMic({ apiUrl }: { apiUrl: string }) {
         }}
       >
         <div>
-          <div style={{ fontWeight: 700, fontSize: "1.05rem" }}>
-            Pipe Dreams By Jill
-          </div>
+          <div style={{ fontWeight: 700, fontSize: "1.05rem" }}>Pipe Dreams by Jill</div>
           <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>
             Serving the GTA since 2003 · Voice mode
           </div>
