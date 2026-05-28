@@ -249,9 +249,35 @@ export default function CustomerChat({ apiUrl }: { apiUrl: string }) {
           );
         })}
         {loading && (
-          <div style={{ color: "#6b7280", fontSize: "0.85rem", paddingLeft: "0.5rem" }}>
-            …
-          </div>
+          <>
+            <style>{`
+              @keyframes _pdj-bounce {
+                0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+                40%            { transform: translateY(-6px); opacity: 1; }
+              }
+              ._pdj-dot {
+                width: 7px; height: 7px; border-radius: 50%;
+                background: #9ca3af; display: inline-block;
+                animation: _pdj-bounce 1.2s ease-in-out infinite;
+              }
+              ._pdj-dot:nth-child(2) { animation-delay: 0.2s; }
+              ._pdj-dot:nth-child(3) { animation-delay: 0.4s; }
+            `}</style>
+            <div style={{
+              display: "flex", justifyContent: "flex-start",
+              marginBottom: "0.6rem", paddingLeft: "0.25rem",
+            }}>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                background: "#f3f4f6", borderRadius: "18px 18px 18px 4px",
+                padding: "10px 14px",
+              }}>
+                <span className="_pdj-dot" />
+                <span className="_pdj-dot" />
+                <span className="_pdj-dot" />
+              </div>
+            </div>
+          </>
         )}
         {error && (
           <div
