@@ -13,6 +13,7 @@ RUN uv sync --frozen --no-dev
 
 # Then copy the application code.
 COPY app ./app
+COPY documentations ./documentations
 
 # Use the virtualenv uv created.
 ENV PATH="/app/.venv/bin:$PATH"
