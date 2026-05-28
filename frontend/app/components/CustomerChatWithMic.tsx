@@ -17,8 +17,6 @@ import {
   type VoiceEvent,
 } from "./voiceClient";
 
-const STORAGE_KEY = "pipeline.voice_conversation_id";
-
 export default function CustomerChatWithMic({ apiUrl }: { apiUrl: string }) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -31,25 +29,6 @@ export default function CustomerChatWithMic({ apiUrl }: { apiUrl: string }) {
   const sessionRef = useRef<VoiceClientHandle | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // ---- Mount: try to resume from localStorage.
-  useEffect(() => {
-    const stored =
-      typeof window !== "undefined"
-        ? window.localStorage.getItem(STORAGE_KEY)
-        : null;
-    if (!stored) return;
-    setConversationId(stored);
-    getConversation(apiUrl, stored)
-      .then((state) => {
-        setMessages(state.messages);
-        setLastTurn(state.last_turn);
-      })
-      .catch(() => {
-        window.localStorage.removeItem(STORAGE_KEY);
-        setConversationId(null);
-      });
-  }, [apiUrl]);
 
   // ---- Auto-scroll.
   useEffect(() => {
@@ -101,9 +80,6 @@ export default function CustomerChatWithMic({ apiUrl }: { apiUrl: string }) {
       switch (e.type) {
         case "conversation_started":
           setConversationId(e.conversation_id);
-          if (typeof window !== "undefined") {
-            window.localStorage.setItem(STORAGE_KEY, e.conversation_id);
-          }
           break;
 
         case "session_ready":
@@ -193,9 +169,6 @@ export default function CustomerChatWithMic({ apiUrl }: { apiUrl: string }) {
 
   function startOver() {
     void stopMic();
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
     setConversationId(null);
     setMessages([]);
     setLastTurn(null);

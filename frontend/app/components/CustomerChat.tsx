@@ -16,8 +16,6 @@ import type {
   SlotOffer,
 } from "./types";
 
-const STORAGE_KEY = "pipeline.conversation_id";
-
 export default function CustomerChat({ apiUrl }: { apiUrl: string }) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -27,25 +25,6 @@ export default function CustomerChat({ apiUrl }: { apiUrl: string }) {
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // ---- Mount: resume from localStorage if present.
-  useEffect(() => {
-    const stored = typeof window !== "undefined"
-      ? window.localStorage.getItem(STORAGE_KEY)
-      : null;
-    if (!stored) return;
-    setConversationId(stored);
-    getConversation(apiUrl, stored)
-      .then((state) => {
-        setMessages(state.messages);
-        setLastTurn(state.last_turn);
-      })
-      .catch(() => {
-        // Stale id (server wiped, dev mode, etc.) — start fresh.
-        window.localStorage.removeItem(STORAGE_KEY);
-        setConversationId(null);
-      });
-  }, [apiUrl]);
 
   // ---- Auto-scroll on new content.
   useEffect(() => {
@@ -96,9 +75,6 @@ export default function CustomerChat({ apiUrl }: { apiUrl: string }) {
       const resp = await postChat(apiUrl, text, conversationId);
       if (!conversationId) {
         setConversationId(resp.conversation_id);
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(STORAGE_KEY, resp.conversation_id);
-        }
       }
       // Re-fetch full state so messages and last_turn are authoritative.
       const state = await getConversation(apiUrl, resp.conversation_id);
@@ -121,9 +97,6 @@ export default function CustomerChat({ apiUrl }: { apiUrl: string }) {
   }
 
   function startOver() {
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
     setConversationId(null);
     setMessages([]);
     setLastTurn(null);
