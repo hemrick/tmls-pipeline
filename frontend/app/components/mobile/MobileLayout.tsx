@@ -37,9 +37,10 @@ export default function MobileLayout({
       <div style={{
         padding: withBack ? "8px 16px 12px" : "12px 16px 14px",
         display: "flex", alignItems: "center", gap: 10, flexShrink: 0,
+        position: "relative",
         background: C.bgPage, borderBottom: `0.5px solid ${C.borderLight}`,
       }}>
-        {withBack && (
+        {withBack ? (
           <button
             onClick={onBack}
             style={{
@@ -52,20 +53,42 @@ export default function MobileLayout({
           >
             <i className="ti ti-chevron-left" />
           </button>
-        )}
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: withBack ? 18 : 22, fontWeight: 500, color: C.textPrimary, lineHeight: 1.2 }}>
-            {title}
+        ) : (
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 22, fontWeight: 500, color: C.textPrimary, lineHeight: 1.2 }}>
+              {title}
+            </div>
+            {subtitle && (
+              <div style={{ fontSize: 12, color: C.textSecondary, marginTop: 2 }}>{subtitle}</div>
+            )}
           </div>
-          {subtitle && (
-            <div style={{ fontSize: 12, color: C.textSecondary, marginTop: 2 }}>{subtitle}</div>
-          )}
-        </div>
-        {!withBack && (
-          <>
+        )}
+
+        {/* Logo — centered absolutely so it doesn't shift the left/right flex items */}
+        <img
+          src="/branding/pipe-dreams-by-jill-mark.svg"
+          alt="Pipe Dreams by Jill"
+          style={{
+            position: "absolute", left: "50%", top: "50%",
+            transform: "translate(-50%, -50%)",
+            height: 30, width: 30, objectFit: "contain", pointerEvents: "none",
+          }}
+        />
+
+        {withBack ? (
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 18, fontWeight: 500, color: C.textPrimary, lineHeight: 1.2 }}>
+              {title}
+            </div>
+            {subtitle && (
+              <div style={{ fontSize: 12, color: C.textSecondary, marginTop: 2 }}>{subtitle}</div>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 0 }}>
             <button style={iconBtnStyle} aria-label="Notifications"><i className="ti ti-bell" /></button>
             <button style={iconBtnStyle} aria-label="Settings"><i className="ti ti-settings" /></button>
-          </>
+          </div>
         )}
       </div>
 
