@@ -171,3 +171,73 @@ patch state without running a full agent turn:
 
 These writes do not increment `turn_number` because they are not agent
 turns.
+
+## III. Jill's service catalog
+
+The catalog editor is the UI surface Jill uses to tune the agent's domain
+knowledge without touching prompts or code. It is the editable
+counterpart to the read-only `PLUMBING_KNOWLEDGE` block described above:
+the editor writes structured data, the system regenerates the prompt
+block from that data on the next turn.
+
+### Why expose this and not the full prompt
+
+Most of `CONVERSATION_AGENT_INSTRUCTIONS` is mechanics — tool ordering,
+state-block consumption, JSON schemas — that would break the agent if a
+non-technical user edited it. The catalog is the opposite: it is pure
+domain policy (what services Jill offers, her prices, the right questions
+to ask). Surfacing it as a structured editor lets Jill change the things
+she is the expert on, while keeping the orchestration off-limits.
+
+### What is editable
+
+One row per `problem_type`. All fields are free-text except the price
+bounds, which are integers.
+
+| Field | Editable? | Notes |
+|---|---|---|
+| `problem_type` (slug) | Yes for new rows, locked for `default` | Snake-case identifier; passed to `generate_quote_draft`. |
+| Display name | Yes | Used in dashboard labels and quote summaries. |
+| Price low / Price high | Yes | Integer dollars. `generate_quote_draft` will not return numbers outside this range. |
+| Scoping question 1 | Yes | The first question the agent must ask before quoting a `priority` job of this type. |
+| Scoping question 2 | Yes | The second question. Both are required before `generate_quote_draft` is allowed to fire. |
+| Active | Yes | Soft-delete toggle — inactive rows are excluded from the rendered `PLUMBING_KNOWLEDGE` block but kept for historical quotes. |
+
+The `default` row is always present and cannot be deleted; it is the
+fallback when no other `problem_type` matches the customer's description.
+Its scoping questions and price range are still editable.
+
+### What is NOT exposed in this editor
+
+- The triage definitions (emergency / priority / scheduled signals).
+  Those live in their own editor — see the emergency rules surface.
+- The two global quote disclaimers ("Final pricing will be confirmed
+  on-site after inspection." and the older-homes / tight-access caveat).
+  Tone-level copy, edited elsewhere.
+- The hard rule that **two scoping questions are required before a quote
+  is drafted**. The editor controls the *content* of the questions, not
+  whether they are asked.
+- Anything about tool order, the `<state>` block, or the booking flow.
+
+### How edits propagate
+
+The catalog is persisted as structured data (one row per service). On
+each turn, the conversation prompt is rendered by interpolating the
+active rows into the `PLUMBING_KNOWLEDGE` template — same shape as
+today's hardcoded block. No agent restart is needed; the next customer
+message picks up the new values.
+
+`generate_quote_draft` reads the same row to clamp its output: an unknown
+or inactive `problem_type` is coerced to `default`, and the returned
+range is always within `[price_low, price_high]` for the matched row.
+
+### Audit and safety
+
+- Every save writes a new version with timestamp + editor identity. The
+  previous version stays queryable so a stray edit can be rolled back.
+- Quotes already drafted under an older version of a row keep their
+  original numbers (the historical row is the source of truth for that
+  quote, not the live row).
+- Validation on save: `price_low <= price_high`, both scoping questions
+  non-empty, slug unique and snake-case. Failures block the save with an
+  inline error.
