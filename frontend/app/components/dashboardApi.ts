@@ -7,6 +7,7 @@ export interface IndexEntry {
   summary: string;
   urgency?: UrgencyLevel | null;
   status: ConversationStatus;
+  quote_status?: string | null;
   sub_reason?: string | null;
   updated_at: string;
 }

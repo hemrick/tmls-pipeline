@@ -201,56 +201,81 @@ export default function CustomerChat({ apiUrl }: { apiUrl: string }) {
         }}
       >
         {messages.length === 0 && (
-          <div style={{ color: "#6b7280", textAlign: "center", marginTop: "3rem" }}>
-            Send a message to start.
-          </div>
+          <MessageBubble
+            message={{
+              role: "agent",
+              content: "Hi, I'm Jill's AI assistant for Pipe Dreams by Jill. What can I help you with today?",
+              timestamp: new Date().toISOString(),
+            }}
+          />
         )}
-        {messages.map((m, i) => {
-          const isLast = i === messages.length - 1;
-          return (
-            <MessageBubble key={i} message={m}>
-              {/* Render cards after the most recent agent message only. */}
-              {isLast && m.role === "agent" && (
-                <>
-                  {isWaiting && <WaitingForJill />}
-                  {showQuoteCard && lastTurn?.quote && (
-                    <QuoteCard
-                      quote={lastTurn.quote}
-                      disabled={
-                        loading ||
-                        lastTurn.quote.quote_status === "customer_accepted" ||
-                        lastTurn.quote.quote_status === "customer_declined" ||
-                        closed
-                      }
-                      onAccept={() =>
-                        sendMessage("I accept the quote. Please book me in.")
-                      }
-                      onDecline={() =>
-                        sendMessage("I'd like to decline the quote, thanks.")
-                      }
-                    />
-                  )}
-                  {showSlots && lastTurn?.booking?.slots_offered && (
-                    <SlotButtons
-                      slots={lastTurn.booking.slots_offered}
-                      disabled={
-                        loading ||
-                        lastTurn.booking.booking_status === "booked" ||
-                        closed
-                      }
-                      onPick={(slot: SlotOffer) =>
-                        sendMessage(`I'll take ${slot.label} (${slot.slot_id}).`)
-                      }
-                    />
-                  )}
-                </>
-              )}
-            </MessageBubble>
-          );
-        })}
+        {messages.map((m, i) => (
+          <MessageBubble key={i} message={m} />
+        ))}
+
+        {/* Persistent card area — rendered after messages, never disappears on new turns */}
+        {isWaiting && <WaitingForJill />}
+        {showQuoteCard && lastTurn?.quote && (
+          <QuoteCard
+            quote={lastTurn.quote}
+            disabled={
+              loading ||
+              lastTurn.quote.quote_status === "customer_accepted" ||
+              lastTurn.quote.quote_status === "customer_declined" ||
+              closed
+            }
+            onAccept={() =>
+              sendMessage("I accept the quote. Please book me in.")
+            }
+            onDecline={() =>
+              sendMessage("I'd like to decline the quote, thanks.")
+            }
+          />
+        )}
+        {showSlots && lastTurn?.booking?.slots_offered && (
+          <SlotButtons
+            slots={lastTurn.booking.slots_offered}
+            disabled={
+              loading ||
+              lastTurn.booking.booking_status === "booked" ||
+              closed
+            }
+            onPick={(slot: SlotOffer) =>
+              sendMessage(`I'll take ${slot.label} (${slot.slot_id}).`)
+            }
+          />
+        )}
+
+        {/* Keyframes always present so animation is ready the moment dots appear */}
+        <style>{`
+          @keyframes _pdj-bounce {
+            0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+            40%            { transform: translateY(-6px); opacity: 1; }
+          }
+          ._pdj-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #9ca3af; display: inline-block;
+            animation: _pdj-bounce 1.2s ease-in-out infinite;
+          }
+          ._pdj-dot:nth-child(2) { animation-delay: 0.2s; }
+          ._pdj-dot:nth-child(3) { animation-delay: 0.4s; }
+        `}</style>
+
+        {/* Animated typing throbber while waiting for agent response */}
         {loading && (
-          <div style={{ color: "#6b7280", fontSize: "0.85rem", paddingLeft: "0.5rem" }}>
-            …
+          <div style={{
+            display: "flex", justifyContent: "flex-start",
+            marginBottom: "0.6rem", paddingLeft: "0.25rem",
+          }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 5,
+              background: "#f3f4f6", borderRadius: "18px 18px 18px 4px",
+              padding: "10px 14px",
+            }}>
+              <span className="_pdj-dot" />
+              <span className="_pdj-dot" />
+              <span className="_pdj-dot" />
+            </div>
           </div>
         )}
         {error && (

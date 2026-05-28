@@ -51,6 +51,7 @@ class Quote(TypedDict):
     job_summary: str
     scope: list[str]
     estimated_price_range: str
+    estimated_labour: str
     disclaimer: str
     requires_jill_approval: bool
     version: int
@@ -58,7 +59,13 @@ class Quote(TypedDict):
     next_action: str
 
 
-DISCLAIMER = "Final pricing will be confirmed on-site after inspection."
+DISCLAIMER = (
+    "This is an estimate only. Final pricing is confirmed on-site after inspection. "
+    "Once work begins, additional issues may be found behind walls or under floors — "
+    "Jill will always discuss any scope changes with you before proceeding beyond what is quoted. "
+    "Billing is based on hourly labour + parts actually used + $10 truck fee. "
+    "Pipe Dreams by Jill is fully insured up to $2M."
+)
 
 
 # ---------------------------------------------------------------------------
@@ -68,51 +75,99 @@ DISCLAIMER = "Final pricing will be confirmed on-site after inspection."
 _TEMPLATES: dict[str, dict] = {
     "leaking_faucet": {
         "scope": [
-            "Inspect faucet and supply lines",
-            "Diagnose source of leak",
-            "Repair or recommend replacement if needed",
+            "Inspect faucet, supply lines, and shutoff valves",
+            "Diagnose leak source (cartridge, washer, O-ring, seal, or supply line)",
+            "Replace faulty cartridge, washer, O-ring, or seal",
+            "Test and confirm leak-free before leaving",
         ],
         "estimated_price_range": "$150-$300",
+        "estimated_labour": "10-30 min",
+    },
+    "faucet_install": {
+        "scope": [
+            "Remove existing faucet",
+            "Install new faucet and connect supply lines",
+            "Test for leaks",
+        ],
+        "estimated_price_range": "$150-$300",
+        "estimated_labour": "10-30 min",
     },
     "hot_water_tank": {
         "scope": [
-            "Inspect hot water tank and heating components",
-            "Diagnose root cause (element, thermostat, gas valve, etc.)",
-            "Repair or recommend replacement if needed",
+            "Inspect tank, heating elements, thermostat, and gas valve (as applicable)",
+            "Diagnose root cause of failure",
+            "Replace faulty element, thermostat, or gas valve if repairable",
+            "Recommend full tank replacement for units 10+ years old or beyond repair",
+            "Note: gas work requires a licensed gas-fitter (arranged separately if needed)",
         ],
         "estimated_price_range": "$250-$600",
+        "estimated_labour": "2-4 hrs",
     },
     "dishwasher_install": {
         "scope": [
-            "Disconnect existing dishwasher (if present)",
+            "Disconnect and remove existing dishwasher if present",
             "Install and level new dishwasher",
             "Connect supply line and drain; leak test",
+            "Disposal of old unit if requested (+$50)",
         ],
-        "estimated_price_range": "$200-$400",
+        "estimated_price_range": "$150-$350",
+        "estimated_labour": "20-45 min",
     },
     "clogged_drain": {
         "scope": [
             "Inspect affected drain",
             "Clear blockage using appropriate tools (snake, hydro-jet, etc.)",
-            "Confirm flow restored and check for damage",
+            "Confirm flow restored and inspect for damage",
         ],
         "estimated_price_range": "$150-$350",
+        "estimated_labour": "30-90 min",
     },
     "toilet_repair": {
         "scope": [
-            "Inspect toilet and connections",
-            "Diagnose issue (flapper, fill valve, wax seal, etc.)",
-            "Repair or replace components as needed",
+            "Inspect toilet, tank internals, supply line, and base",
+            "Diagnose issue (flapper, fill valve, flush valve, wax seal, rocking base)",
+            "Replace flapper, fill valve, or flush valve as indicated",
+            "Re-seat and re-seal wax ring if toilet is rocking or leaking at base",
+            "Test flush cycle and confirm no leaks before leaving",
         ],
         "estimated_price_range": "$150-$400",
+        "estimated_labour": "30-60 min",
+    },
+    "toilet_install": {
+        "scope": [
+            "Remove and dispose of existing toilet",
+            "Install new toilet; set wax ring and seal",
+            "Connect supply line; test flush and check for leaks",
+        ],
+        "estimated_price_range": "$200-$450",
+        "estimated_labour": "1-2 hrs",
+    },
+    "pipe_repair": {
+        "scope": [
+            "Locate and access leaking pipe",
+            "Repair or replace damaged section",
+            "Restore water flow; test and inspect for additional leaks",
+        ],
+        "estimated_price_range": "$200-$600",
+        "estimated_labour": "1-3 hrs",
+    },
+    "garbage_disposal_install": {
+        "scope": [
+            "Remove existing disposal unit if present",
+            "Install and secure new garbage disposal",
+            "Connect drain; test operation and check for leaks",
+        ],
+        "estimated_price_range": "$150-$350",
+        "estimated_labour": "30-60 min",
     },
     "default": {
         "scope": [
-            "On-site inspection",
-            "Diagnose root cause",
-            "Repair or recommend next steps",
+            "On-site inspection and diagnosis of all reported issues",
+            "Complete repairs per agreed scope (see job summary for full task list)",
+            "Confirm all issues resolved and test before leaving",
         ],
         "estimated_price_range": "$150-$500",
+        "estimated_labour": "1-3 hrs",
     },
 }
 
@@ -128,17 +183,20 @@ def generate_quote_draft(
     problem_type: str = "default",
     scope: Optional[list[str]] = None,
     estimated_price_range: Optional[str] = None,
+    estimated_labour: Optional[str] = None,
 ) -> Quote:
     """Generate a fresh quote draft and immediately mark it pending Jill
     review.
 
     Args:
-        job_summary: One-sentence summary of the customer's problem.
+        job_summary: One or two sentences describing all jobs in scope.
+            For multi-service jobs, list each item and key scoping details.
         problem_type: Key into the template table (e.g. ``"hot_water_tank"``).
+            Use ``"default"`` for multi-service or unrecognized types.
             Falls back to ``"default"`` for unknown values.
         scope: Optional override for the scope bullets.
-        estimated_price_range: Optional override for the price range
-            string.
+        estimated_price_range: Optional override for the price range string.
+        estimated_labour: Optional override for the labour estimate string.
     """
     if not job_summary or not isinstance(job_summary, str):
         raise ValueError("job_summary must be a non-empty string")
@@ -150,6 +208,7 @@ def generate_quote_draft(
         job_summary=job_summary.strip(),
         scope=list(scope) if scope is not None else list(template["scope"]),
         estimated_price_range=estimated_price_range or template["estimated_price_range"],
+        estimated_labour=estimated_labour or template.get("estimated_labour", "1-3 hrs"),
         disclaimer=DISCLAIMER,
         requires_jill_approval=True,
         version=1,
@@ -298,6 +357,7 @@ def start_revision(
         job_summary=(job_summary or previous_quote["job_summary"]).strip(),
         scope=list(scope) if scope is not None else list(template["scope"]),
         estimated_price_range=estimated_price_range or template["estimated_price_range"],
+        estimated_labour=previous_quote.get("estimated_labour") or template.get("estimated_labour", "1-3 hrs"),
         disclaimer=DISCLAIMER,
         requires_jill_approval=True,
         version=new_version,
@@ -354,6 +414,7 @@ def _transition(
         job_summary=quote["job_summary"],
         scope=list(quote["scope"]),
         estimated_price_range=quote["estimated_price_range"],
+        estimated_labour=quote.get("estimated_labour", "1-3 hrs"),
         disclaimer=quote["disclaimer"],
         requires_jill_approval=quote["requires_jill_approval"],
         version=quote["version"],

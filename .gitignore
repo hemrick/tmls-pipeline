@@ -1,0 +1,15 @@
+# Claude Code internal files
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+specifications/.DS_Store
+
+# Local dev data (never commit)
+backend/local_storage/
+backend/mock_data/
+
+frontend/.next/
+frontend/node_modules/
+frontend/.env.local

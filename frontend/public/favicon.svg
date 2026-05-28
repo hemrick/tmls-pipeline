@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Navy background -->
+  <rect width="32" height="32" rx="6" fill="#21295C"/>
+  <!-- Pipe icon: horizontal pipe with elbow and vertical drop -->
+  <!-- Horizontal bar top -->
+  <rect x="6" y="10" width="14" height="4" rx="2" fill="white"/>
+  <!-- Elbow cap (circle at right of horizontal) -->
+  <circle cx="20" cy="12" r="2" fill="white"/>
+  <!-- Vertical drop from right end -->
+  <rect x="18" y="12" width="4" height="11" rx="2" fill="white"/>
+  <!-- Small nozzle at bottom -->
+  <rect x="16" y="21" width="8" height="3" rx="1.5" fill="white"/>
+  <!-- Water drop -->
+  <ellipse cx="20" cy="27" rx="2" ry="2.5" fill="#7DD3FC"/>
+</svg>
