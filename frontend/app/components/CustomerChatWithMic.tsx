@@ -6,6 +6,7 @@ import MessageBubble from "./MessageBubble";
 import MicButton, { type MicState } from "./MicButton";
 import QuoteCard from "./QuoteCard";
 import SlotButtons from "./SlotButtons";
+import TypingDots from "./TypingDots";
 import UrgencyChip from "./UrgencyChip";
 import WaitingForJill from "./WaitingForJill";
 import { getConversation } from "./api";
@@ -246,6 +247,8 @@ export default function CustomerChatWithMic({ apiUrl }: { apiUrl: string }) {
     };
   }, []);
 
+  const showLogo = messages.length === 0 && !streamingAgentText;
+
   return (
     <div
       style={{
@@ -257,6 +260,21 @@ export default function CustomerChatWithMic({ apiUrl }: { apiUrl: string }) {
         background: "white",
       }}
     >
+      {showLogo && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "1.25rem 1rem 0.5rem",
+          }}
+        >
+          <img
+            src="/branding/pipe-dreams-by-jill-mark.svg"
+            alt="Pipe Dreams by Jill"
+            style={{ width: 180, maxWidth: "60%", height: "auto" }}
+          />
+        </div>
+      )}
       <header
         style={{
           padding: "0.9rem 1rem",
@@ -356,6 +374,8 @@ export default function CustomerChatWithMic({ apiUrl }: { apiUrl: string }) {
             </MessageBubble>
           );
         })}
+
+        {micState === "thinking" && !streamingAgentText && <TypingDots />}
 
         {streamingAgentText && (
           <MessageBubble

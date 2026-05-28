@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import MessageBubble from "./MessageBubble";
 import QuoteCard from "./QuoteCard";
 import SlotButtons from "./SlotButtons";
+import TypingDots from "./TypingDots";
 import UrgencyChip from "./UrgencyChip";
 import WaitingForJill from "./WaitingForJill";
 import { getConversation, postChat } from "./api";
@@ -143,6 +144,8 @@ export default function CustomerChat({ apiUrl }: { apiUrl: string }) {
     lastTurn?.booking?.booking_status === "link_sent";
   const inputDisabled = loading || closed || isWaiting;
 
+  const showLogo = messages.length === 0;
+
   return (
     <div
       style={{
@@ -154,6 +157,21 @@ export default function CustomerChat({ apiUrl }: { apiUrl: string }) {
         background: "white",
       }}
     >
+      {showLogo && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "1.25rem 1rem 0.5rem",
+          }}
+        >
+          <img
+            src="/branding/pipe-dreams-by-jill-mark.svg"
+            alt="Pipe Dreams by Jill"
+            style={{ width: 180, maxWidth: "60%", height: "auto" }}
+          />
+        </div>
+      )}
       <header
         style={{
           padding: "0.9rem 1rem",
@@ -248,37 +266,7 @@ export default function CustomerChat({ apiUrl }: { apiUrl: string }) {
             </MessageBubble>
           );
         })}
-        {loading && (
-          <>
-            <style>{`
-              @keyframes _pdj-bounce {
-                0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-                40%            { transform: translateY(-6px); opacity: 1; }
-              }
-              ._pdj-dot {
-                width: 7px; height: 7px; border-radius: 50%;
-                background: #9ca3af; display: inline-block;
-                animation: _pdj-bounce 1.2s ease-in-out infinite;
-              }
-              ._pdj-dot:nth-child(2) { animation-delay: 0.2s; }
-              ._pdj-dot:nth-child(3) { animation-delay: 0.4s; }
-            `}</style>
-            <div style={{
-              display: "flex", justifyContent: "flex-start",
-              marginBottom: "0.6rem", paddingLeft: "0.25rem",
-            }}>
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: 5,
-                background: "#f3f4f6", borderRadius: "18px 18px 18px 4px",
-                padding: "10px 14px",
-              }}>
-                <span className="_pdj-dot" />
-                <span className="_pdj-dot" />
-                <span className="_pdj-dot" />
-              </div>
-            </div>
-          </>
-        )}
+        {loading && <TypingDots />}
         {error && (
           <div
             style={{
