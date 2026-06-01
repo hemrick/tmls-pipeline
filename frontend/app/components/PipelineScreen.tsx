@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 
 import { C, urgencyColors, urgencyLabel, statusLabel } from "../dashboard/tokens";
-import { relativeTime, type IndexEntry } from "./dashboardApi";
+import { byCreatedDesc, relativeTime, type IndexEntry } from "./dashboardApi";
 
 function GroupHeader({ icon, label }: { icon: string; label: string }) {
   return (
@@ -136,29 +136,38 @@ export default function PipelineScreen({
   conversations: IndexEntry[];
   onSelectConversation: (id: string) => void;
 }) {
-  // Group conversations
-  const needsYou = conversations.filter(
-    (c) =>
-      !c.status.startsWith("closed") &&
-      c.status !== "booked" &&
-      (c.urgency === "emergency" ||
-        (c.urgency as string) === "safety_escalation" ||
-        c.status === "new" ||
-        c.status === "quoted")
-  );
+  // Group conversations. Each bucket is independently sorted by creation
+  // time descending — newest at the top within its section.
+  const needsYou = conversations
+    .filter(
+      (c) =>
+        !c.status.startsWith("closed") &&
+        c.status !== "booked" &&
+        (c.urgency === "emergency" ||
+          (c.urgency as string) === "safety_escalation" ||
+          c.status === "new" ||
+          c.status === "quoted")
+    )
+    .sort(byCreatedDesc);
 
-  const customerSide = conversations.filter(
-    (c) =>
-      !c.status.startsWith("closed") &&
-      c.status !== "booked" &&
-      c.status === "in_progress" &&
-      c.urgency !== "emergency" &&
-      (c.urgency as string) !== "safety_escalation"
-  );
+  const customerSide = conversations
+    .filter(
+      (c) =>
+        !c.status.startsWith("closed") &&
+        c.status !== "booked" &&
+        c.status === "in_progress" &&
+        c.urgency !== "emergency" &&
+        (c.urgency as string) !== "safety_escalation"
+    )
+    .sort(byCreatedDesc);
 
-  const booked = conversations.filter((c) => c.status === "booked");
+  const booked = conversations
+    .filter((c) => c.status === "booked")
+    .sort(byCreatedDesc);
 
-  const closed = conversations.filter((c) => c.status.startsWith("closed"));
+  const closed = conversations
+    .filter((c) => c.status.startsWith("closed"))
+    .sort(byCreatedDesc);
 
   const [closedOpen, setClosedOpen] = useState(false);
 

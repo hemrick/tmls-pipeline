@@ -1,7 +1,7 @@
 "use client";
 
 import { C } from "../dashboard/tokens";
-import { relativeTime, type IndexEntry } from "./dashboardApi";
+import { byCreatedDesc, relativeTime, type IndexEntry } from "./dashboardApi";
 
 export default function QuoteApprovalsScreen({
   conversations,
@@ -12,7 +12,9 @@ export default function QuoteApprovalsScreen({
   onBack: () => void;
   onReviewQuote: (id: string) => void;
 }) {
-  const pending = conversations.filter((c) => c.status === "quoted");
+  const pending = conversations
+    .filter((c) => c.status === "quoted")
+    .sort(byCreatedDesc);
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto", padding: "20px 24px 48px", color: C.textPrimary }}>

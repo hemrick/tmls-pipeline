@@ -138,6 +138,7 @@ class IndexEntry(TypedDict, total=False):
     status: ConversationStatus
     quote_status: Optional[str]
     sub_reason: Optional[SubReason]
+    created_at: str
     updated_at: str
 
 
@@ -262,6 +263,7 @@ def to_index_entry(state: ConversationState) -> IndexEntry:
         status=lt.get("status", "new"),
         quote_status=quote.get("quote_status") if quote else None,
         sub_reason=lt.get("sub_reason"),
+        created_at=state["created_at"],
         updated_at=state["updated_at"],
     )
 

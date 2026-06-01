@@ -9,7 +9,14 @@ export interface IndexEntry {
   status: ConversationStatus;
   quote_status?: string | null;
   sub_reason?: string | null;
+  created_at?: string;
   updated_at: string;
+}
+
+// Newest creation first. Falls back to updated_at for legacy index rows
+// written before created_at was exposed.
+export function byCreatedDesc(a: IndexEntry, b: IndexEntry): number {
+  return (b.created_at ?? b.updated_at).localeCompare(a.created_at ?? a.updated_at);
 }
 
 export interface Index {

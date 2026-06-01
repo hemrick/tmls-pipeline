@@ -47,7 +47,7 @@ export default function DocumentationClient({ apiUrl }: { apiUrl: string }) {
       return;
     }
     setOpen((prev) => ({ ...prev, [slug]: true }));
-    if (contents[slug] || loadingSlug === slug) return;
+    if (loadingSlug === slug) return;
     setLoadingSlug(slug);
     try {
       const res = await fetch(`${apiUrl}/api/docs/${slug}`);
